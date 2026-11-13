@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="ESP32-C3 SuperMini 腳位互動學習：腳位圖、Mochi 螢幕接線模擬、Flash/RAM 空間預算。">
+<meta name="description" content="ESP32-C3 SuperMini 腳位互動學習：腳位圖、Clawd Mochi 螢幕接線模擬、實測 Flash/RAM 空間預算。">
 <style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Mochi 腳位實驗室</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Layout: a workbench. Sticky tab bar on top, four tools below (lessons, pin map, wiring bench, space budget).
+/* Layout: a workbench. Sticky tab bar on top, two tools below (pin map, wiring bench with the Mochi controller and space budget).
    The black SuperMini PCB is the one dark object on a cool white bench; blue is the working accent. */
 :root{
   --bg:#F4F8FC; --surface:#FFFFFF; --sunken:#EAF1F8; --ink:#10233A; --muted:#56697F; --line:#D5E0EC;
@@ -17,8 +17,9 @@
   --c-power:#D4483B; --c-gnd:#59636E; --c-safe:#14885A; --c-strap:#C47A00; --c-comm:#1766D6; --c-plain:#6B5BD2;
   --pcb:#141B24; --pcb-edge:#2B3948; --silk:#DCE6F0; --pad:#D9A93A;
   --w-gnd:#6B7785;
-  --s1:#1766D6; --s2:#2FA36B; --s3:#9B6BF2; --s4:#F08C2E; --s5:#E056A0; --s6:#14A3B8;
+  --s1:#1766D6; --s2:#2FA36B; --s3:#9B6BF2; --s4:#F08C2E; --s5:#E056A0; --s6:#14A3B8; --s7:#C9A400; --s8:#8C97A3;
   --code-bg:#0F1D2C; --code-ink:#CFE6F7; --code-dim:#7C97AD; --code-num:#F5B45F;
+  --scrim:rgba(10,20,34,.55);
   --f-display:"Space Grotesk","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
   --f-mono:"JetBrains Mono","Cascadia Code",Consolas,monospace;
@@ -29,7 +30,7 @@
     --bg:#0B131C; --surface:#121D29; --sunken:#0E1823; --ink:#E6EEF7; --muted:#93A6BA; --line:#24364A;
     --accent:#5AA2FF; --accent-ink:#9CC6FF; --accent-soft:#15304F;
     --ok:#4CC38A; --ok-soft:#12372A; --warn:#F0B24A; --warn-soft:#3A2A0C; --bad:#FF7A7A; --bad-soft:#3E1A1A;
-    --pcb:#1A2430; --pcb-edge:#42566B; --w-gnd:#8E9AA8;
+    --pcb:#1A2430; --pcb-edge:#42566B; --w-gnd:#8E9AA8; --scrim:rgba(0,0,0,.65);
     --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
     color-scheme:dark;
   }
@@ -38,7 +39,7 @@
   --bg:#0B131C; --surface:#121D29; --sunken:#0E1823; --ink:#E6EEF7; --muted:#93A6BA; --line:#24364A;
   --accent:#5AA2FF; --accent-ink:#9CC6FF; --accent-soft:#15304F;
   --ok:#4CC38A; --ok-soft:#12372A; --warn:#F0B24A; --warn-soft:#3A2A0C; --bad:#FF7A7A; --bad-soft:#3E1A1A;
-  --pcb:#1A2430; --pcb-edge:#42566B; --w-gnd:#8E9AA8;
+  --pcb:#1A2430; --pcb-edge:#42566B; --w-gnd:#8E9AA8; --scrim:rgba(0,0,0,.65);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
   color-scheme:dark;
 }
@@ -48,9 +49,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 a{color:var(--accent)}
 button,select,input{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
-.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1220px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
-/* top bar */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:8px 20px;flex-wrap:wrap;padding-block:10px}
 .brand{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.01em;display:flex;align-items:center;gap:9px;margin-right:auto;white-space:nowrap}
@@ -58,10 +58,9 @@ button,select,input{font:inherit;color:inherit}
 .brand i::before{content:"";position:absolute;left:5px;right:5px;top:-3px;height:7px;border-radius:2px;background:#AEB9C4}
 .brand i::after{content:"";position:absolute;left:5px;right:5px;bottom:5px;height:8px;border-radius:1px;background:var(--pad)}
 .tabs{display:flex;gap:4px;overflow-x:auto;max-width:100%;scrollbar-width:none}
-.tabs a{text-decoration:none;color:var(--muted);font-weight:500;padding:7px 13px;border-radius:999px;white-space:nowrap;font-size:14.5px}
+.tabs a{text-decoration:none;color:var(--muted);font-weight:500;padding:7px 15px;border-radius:999px;white-space:nowrap;font-size:14.5px}
 .tabs a:hover{color:var(--ink);background:var(--sunken)}
 .tabs a[aria-current="page"]{background:var(--accent);color:#fff}
-.prog{font-family:var(--f-mono);font-size:12.5px;color:var(--accent-ink);background:var(--accent-soft);border-radius:999px;padding:4px 11px;white-space:nowrap}
 
 main{padding-block:28px 72px}
 h1,h2,h3{font-family:var(--f-body);line-height:1.3;margin:0;text-wrap:balance}
@@ -70,20 +69,21 @@ h2{font-size:21px;font-weight:700}
 h3{font-size:16px;font-weight:700}
 p{margin:0}
 .eyebrow{font-family:var(--f-display);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink)}
-.lead{color:var(--muted);max-width:60ch}
+.lead{color:var(--muted);max-width:62ch}
 .mono{font-family:var(--f-mono)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
 .pad{padding:18px}
-.stack{display:flex;flex-direction:column;gap:14px}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
 .viewhead{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
 
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 14px;cursor:pointer;font-weight:500;font-size:14.5px;line-height:1.4}
-.btn:hover{border-color:var(--accent)}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.on{background:var(--ok);border-color:var(--ok);color:#fff}
-.btn.ghost{background:transparent}
 .btn.small{padding:4px 10px;font-size:13px}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13.5px;display:inline-flex;align-items:center;gap:7px}
 .chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -91,50 +91,14 @@ p{margin:0}
 .tag{display:inline-block;font-size:12px;font-weight:500;border-radius:6px;padding:1px 8px;color:#fff;line-height:1.7}
 .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 11px;font-size:13px;font-weight:500}
 .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)}
-code.i{font-family:var(--f-mono);font-size:.88em;background:var(--sunken);border:1px solid var(--line);border-radius:5px;padding:0 5px}
 .codeblock{background:var(--code-bg);color:var(--code-ink);border-radius:11px;overflow-x:auto;padding:14px 16px;font-family:var(--f-mono);font-size:12.8px;line-height:1.75;white-space:pre;margin:0}
 .codeblock .d{color:var(--code-dim)} .codeblock b{color:var(--code-num);font-weight:600}
 .note{font-size:13.5px;color:var(--muted)}
-
-/* lessons */
-.lgrid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:26px;align-items:start}
-.hero{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
-.meter{height:10px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);overflow:hidden}
-.meter span{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .3s}
-.route{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.route a{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink);padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
-.route a:hover{border-color:var(--accent)}
-.route b{font-size:14.5px} .route span{font-size:12.5px;color:var(--muted);line-height:1.5}
-.lesson{border:1px solid var(--line);border-radius:13px;background:var(--surface);overflow:hidden}
-.lesson + .lesson{margin-top:10px}
-.lesson > button{all:unset;box-sizing:border-box;display:flex;gap:13px;align-items:center;width:100%;padding:13px 16px;cursor:pointer}
-.lesson > button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:13px}
-.lnum{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:13.5px;background:var(--sunken);color:var(--muted);border:1px solid var(--line)}
-.lesson.done .lnum{background:var(--ok);border-color:var(--ok);color:#fff}
-.lt{display:flex;flex-direction:column;min-width:0;flex:1}
-.lt b{font-size:15.5px} .lt span{font-size:13px;color:var(--muted);line-height:1.5}
-.lesson .chev{flex:none;color:var(--muted);transition:transform .2s}
-.lesson.open .chev{transform:rotate(90deg)}
-.lbody{padding:2px 16px 18px 59px;display:flex;flex-direction:column;gap:13px}
-.lbody p{max-width:62ch}
-.task{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--sunken);border-radius:10px;padding:9px 12px;font-size:14px}
-.task .st{flex:none;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
-.task.done .st{background:var(--ok);border-color:var(--ok)}
-.task.done .st::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px)}
-.task span{flex:1;min-width:12ch}
-.quiz{border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:9px}
-.quiz .q{font-weight:700}
-.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.opt{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 12px;text-align:left;cursor:pointer;font-size:14.5px}
-.opt:hover{border-color:var(--accent)}
-.opt.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:500}
-.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
-.why{font-size:13.5px;color:var(--muted)}
+svg{display:block;max-width:100%;height:auto}
 
 /* pin map */
-.pgrid{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:22px;align-items:start}
+.pgrid{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr) minmax(0,330px);gap:20px;align-items:start}
 .boardbox{padding:10px 6px}
-svg{display:block;max-width:100%;height:auto}
 .pcb{fill:var(--pcb);stroke:var(--pcb-edge);stroke-width:1.5}
 .silk{font-family:var(--f-mono);font-size:10.5px;fill:var(--silk);pointer-events:none}
 .silk.sm{font-size:8px;opacity:.75}
@@ -145,7 +109,6 @@ svg{display:block;max-width:100%;height:auto}
 .bpin:hover .ring,.bpin:focus-visible .ring{stroke:var(--accent)}
 .bpin.sel .ring{stroke:var(--accent);stroke-width:4}
 .bpin.dim{opacity:.22}
-.bpin .lab rect{stroke:none}
 .bpin .lab text{font-family:var(--f-mono);font-size:11px;font-weight:600;fill:#fff;pointer-events:none}
 .bpin .lead-l{stroke:var(--line);stroke-width:1.5}
 .cat-power .lab rect{fill:var(--c-power)} .cat-gnd .lab rect{fill:var(--c-gnd)} .cat-safe .lab rect{fill:var(--c-safe)}
@@ -154,17 +117,19 @@ svg{display:block;max-width:100%;height:auto}
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;font-size:14.5px}
 .kv dt{color:var(--muted);white-space:nowrap} .kv dd{margin:0}
 .callout{border-radius:10px;padding:10px 13px;font-size:14.5px}
-.callout.warn{background:var(--warn-soft);color:var(--warn)} .callout.info{background:var(--accent-soft);color:var(--accent-ink)} .callout.ok{background:var(--ok-soft);color:var(--ok)} .callout.bad{background:var(--bad-soft);color:var(--bad)}
+.callout.warn{background:var(--warn-soft);color:var(--warn)} .callout.info{background:var(--accent-soft);color:var(--accent-ink)}
 .callout b{font-weight:700}
-.pintable{width:100%;border-collapse:collapse;font-size:13.5px}
-.pintable th,.pintable td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-.pintable th{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
-.pintable tr{cursor:pointer} .pintable tbody tr:hover{background:var(--sunken)}
-.scroll-x{overflow-x:auto}
+.fxlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.fxlist li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;font-size:14px;line-height:1.55}
+.fxlist .dot{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-family:var(--f-display);font-size:11px;font-weight:700;margin-top:2px;border:1px solid var(--line);color:var(--muted);background:var(--sunken)}
+.fxlist li.use .dot{background:var(--accent);border-color:var(--accent);color:#fff}
+.fxlist li:not(.use){color:var(--muted)}
+.fxlist b{display:block;font-size:14px}
+.fxlist small{font-size:12.8px;color:var(--muted)}
 
 /* wiring bench */
 .bench{overflow-x:auto;border-radius:14px}
-.bench svg{min-width:760px;width:100%}
+.bench svg{min-width:640px;width:100%}
 .benchbg{fill:var(--surface)}
 .grid-dot{fill:var(--line)}
 .comp-body{fill:#1E4E9E;stroke:#143A78;stroke-width:1.5}
@@ -176,13 +141,10 @@ svg{display:block;max-width:100%;height:auto}
 .cpin.sel .ring{stroke:var(--accent);stroke-width:4}
 .hint .ring{stroke:var(--warn);stroke-width:3;animation:pulse 1.1s ease-in-out infinite}
 @keyframes pulse{50%{stroke-opacity:.15}}
-@media (prefers-reduced-motion: reduce){.hint .ring{animation:none}.meter span{transition:none}}
+@media (prefers-reduced-motion: reduce){.hint .ring{animation:none}}
 .wire{fill:none;stroke-width:4;stroke-linejoin:round;stroke-linecap:round;pointer-events:none}
 .wire-hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
 .wire-hit:hover + .wire{stroke-width:6.5}
-.btn-cap{fill:#D4483B;stroke:#8F2A22;stroke-width:1.5;cursor:pointer}
-.btn-cap.down{fill:#8F2A22}
-.btn-base{fill:#2A333D;stroke:#0E141A}
 .led{fill:#27405E} .led.on{fill:#57B6FF;filter:drop-shadow(0 0 5px #57B6FF)}
 .wgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
 .mission{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);color:var(--accent-ink);border-radius:11px;padding:10px 14px;font-size:14.5px;margin-bottom:12px}
@@ -190,30 +152,35 @@ svg{display:block;max-width:100%;height:auto}
 .conn{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 12px;align-items:center}
 .conn label{font-family:var(--f-mono);font-size:13px;display:flex;align-items:center;gap:7px;white-space:nowrap}
 .conn label i{width:14px;height:5px;border-radius:3px;display:inline-block}
-.conn select,.field select,.field input[type=number]{width:100%;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
-.diag{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
-.diag li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:9px;font-size:14px;align-items:start}
-.diag .ic{width:18px;height:18px;border-radius:50%;margin-top:3px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;font-family:var(--f-display)}
-.diag .ok .ic{background:var(--ok)} .diag .err .ic{background:var(--bad)} .diag .warn .ic{background:var(--warn)} .diag .info .ic{background:var(--accent)}
-.diag small{display:block;color:var(--muted);font-size:13px;line-height:1.55}
+.conn select,.field select,.field input[type=text]{width:100%;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
 .serial{background:var(--code-bg);color:var(--code-ink);font-family:var(--f-mono);font-size:12.5px;border-radius:10px;padding:10px 13px;height:128px;overflow-y:auto;white-space:pre-wrap;line-height:1.6}
-.budget{display:flex;flex-wrap:wrap;gap:5px}
-.budget span{font-family:var(--f-mono);font-size:12px;border-radius:6px;padding:1px 7px;border:1px solid var(--line);color:var(--muted)}
-.budget span.used{background:var(--accent);border-color:var(--accent);color:#fff}
-
-/* space budget */
-.mgrid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:22px;align-items:start}
-.field{display:flex;flex-direction:column;gap:5px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field > span{font-size:13.5px;font-weight:500}
-.field small{color:var(--muted);font-size:12.5px}
 .check{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;cursor:pointer}
 .check input{margin-top:6px;accent-color:var(--accent);flex:none}
 .check small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5}
 input[type=range]{width:100%;accent-color:var(--accent)}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+
+/* controller */
+.ctltop{display:grid;grid-template-columns:132px minmax(0,1fr);gap:14px;align-items:start}
+.mini-lcd{display:flex;flex-direction:column;gap:4px}
+.mini-lcd svg{border-radius:8px;border:4px solid #0A0E13;background:#05080B;width:100%}
+.ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.vbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;line-height:1.35;text-align:center}
+.vbtn b{font-size:13.5px} .vbtn span{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.vbtn:hover:not(:disabled){border-color:var(--accent)}
+.vbtn[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-ink)}
+.vbtn:disabled{opacity:.45;cursor:not-allowed}
+.swatch{width:26px;height:26px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.padbox{border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:260px;touch-action:none;cursor:crosshair}
+.padbox svg{width:100%}
+
+/* space budget */
 .bigrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.big{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums}
-.bar{position:relative;height:30px;border-radius:8px;background:var(--sunken);border:1px solid var(--line);display:flex;overflow:hidden}
+.big{font-family:var(--f-display);font-weight:700;font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
+.bar{position:relative;height:28px;border-radius:8px;background:var(--sunken);border:1px solid var(--line);display:flex;overflow:hidden}
 .bar span{height:100%;min-width:0}
 .barwrap{position:relative;padding-top:20px}
 .limit{position:absolute;top:0;bottom:-4px;width:0;border-left:2px dashed var(--ink)}
@@ -222,24 +189,35 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .legend{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:12.5px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
 .legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
-.pmap{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
-.pmap span{display:grid;place-items:center;font-family:var(--f-mono);font-size:10.5px;color:#fff;min-width:0;overflow:hidden;white-space:nowrap}
+.fxrows{display:flex;flex-direction:column;gap:7px}
+.fxrow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px}
+.fxrow label{display:flex;gap:8px;align-items:center;cursor:pointer;min-width:0}
+.fxrow input{accent-color:var(--accent);flex:none}
+.fxrow .mini{height:10px;border-radius:5px;background:var(--sunken);overflow:hidden}
+.fxrow .mini span{display:block;height:100%;border-radius:5px}
+.fxrow .num{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted);min-width:9ch;text-align:right}
 .advice{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
-.calc{font-family:var(--f-mono);font-size:13px;background:var(--sunken);border-radius:9px;padding:9px 12px;overflow-x:auto;white-space:nowrap}
 
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;z-index:20;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+/* popup */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:30;display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{background:var(--surface);color:var(--ink);border-radius:16px;border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.35);width:min(560px,100%);max-height:100%;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px}
+.modal h2{display:flex;gap:10px;align-items:center}
+.badge{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--f-display);font-weight:700;font-size:16px}
+.badge.ok{background:var(--ok)} .badge.err{background:var(--bad)} .badge.warn{background:var(--warn)}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.plist li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;font-size:14.5px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.plist .ic{width:18px;height:18px;border-radius:50%;margin-top:4px;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;font-family:var(--f-display)}
+.plist .err .ic{background:var(--bad)} .plist .warn .ic{background:var(--warn)} .plist .info .ic{background:var(--accent)} .plist .ok .ic{background:var(--ok)}
+.plist small{display:block;color:var(--muted);font-size:13.5px;line-height:1.55}
+.plist .hintline{display:block;margin-top:3px;color:var(--accent-ink);font-size:13.5px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 20px);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;z-index:40;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
 footer .wrap{padding-block:18px}
 
-@media (max-width: 860px){
-  .lgrid,.pgrid,.wgrid,.mgrid{grid-template-columns:minmax(0,1fr)}
-  .hero{position:static}
-  .lbody{padding-left:16px}
-}
-@media (max-width: 520px){
-  .route,.opts,.two{grid-template-columns:minmax(0,1fr)}
-  .brand span{display:none}
-}
+@media (max-width: 1120px){.pgrid{grid-template-columns:minmax(0,400px) minmax(0,1fr)} .pgrid .fxcard{grid-column:1 / -1}}
+@media (max-width: 860px){.pgrid,.wgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width: 520px){.two{grid-template-columns:minmax(0,1fr)} .ctltop{grid-template-columns:104px minmax(0,1fr)} .ctl{grid-template-columns:repeat(2,minmax(0,1fr))} .fxrow{grid-template-columns:minmax(0,1fr) auto} .fxrow .mini{display:none}}
 </style>
 </head>
 <body>
@@ -248,55 +226,26 @@ footer .wrap{padding-block:18px}
   <div class="wrap">
     <div class="brand"><i aria-hidden="true"></i><span>Mochi 腳位實驗室</span></div>
     <nav class="tabs" aria-label="主選單">
-      <a href="#lessons" data-tab="lessons">課程</a>
       <a href="#pins" data-tab="pins">腳位圖</a>
       <a href="#wiring" data-tab="wiring">接線模擬</a>
-      <a href="#memory" data-tab="memory">空間預算</a>
     </nav>
-    <div class="prog" id="prog" title="完成的課程數">0 / 8</div>
   </div>
 </header>
 
 <main class="wrap">
 
-<!-- ================= LESSONS ================= -->
-<section class="view" id="view-lessons">
-  <div class="lgrid">
-    <div class="hero">
-      <p class="eyebrow">ESP32-C3 SuperMini × Clawd Mochi</p>
-      <h1>把 13 根腳位，接成一隻會做表情的 Mochi</h1>
-      <p class="lead">先認識 SuperMini 每一根腳能做什麼、哪幾根開機時不能亂碰，再照 Mochi 的排線把螢幕接起來。最後算一算：4MB 的 Flash 到底裝得下幾張表情。</p>
-      <div class="stack" style="gap:6px">
-        <div class="row" style="justify-content:space-between"><b id="progText">已完成 0 / 8 課</b><button class="btn small ghost" id="resetAll" type="button">重新開始</button></div>
-        <div class="meter"><span id="progBar" style="width:0%"></span></div>
-      </div>
-      <div class="route">
-        <a href="#pins"><b>腳位圖</b><span>點任何一根腳，看它的能力和地雷</span></a>
-        <a href="#wiring"><b>接線模擬</b><span>拉線、通電、按按鈕換表情</span></a>
-        <a href="#memory"><b>空間預算</b><span>Flash 和 RAM 會不會爆</span></a>
-      </div>
-    </div>
-    <div id="lessonList" aria-label="課程列表"></div>
-  </div>
-</section>
-
 <!-- ================= PIN MAP ================= -->
-<section class="view" id="view-pins" hidden>
+<section class="view" id="view-pins">
   <div class="viewhead">
-    <p class="eyebrow">Pin map</p>
+    <p class="eyebrow">ESP32-C3 SuperMini × Clawd Mochi</p>
     <h1>SuperMini 腳位圖</h1>
-    <p class="lead">USB-C 朝上、元件面朝自己。16 個焊孔裡有 3 個電源、13 根 GPIO。點一根腳看細節，或用下面的分類把同一類的腳亮起來。</p>
+    <p class="lead">USB-C 朝上、元件面朝自己。16 個焊孔裡有 3 個電源、13 根 GPIO。點一根腳，看它能做什麼，以及 Mochi 的哪些功能會用到它。</p>
   </div>
   <div class="row" id="filters" role="group" aria-label="腳位分類" style="margin-bottom:16px"></div>
   <div class="pgrid">
     <div class="card boardbox"><div id="pinBoard"></div><p class="note" style="text-align:center;padding:0 10px 8px">不同廠的板子絲印位置可能略有差異，接線前以板上印的編號為準。</p></div>
-    <div class="stack">
-      <div class="card pad detail" id="pinDetail" aria-live="polite"></div>
-      <div class="card pad">
-        <h3 style="margin-bottom:8px">全部腳位一覽</h3>
-        <div class="scroll-x"><table class="pintable" id="pinTable"></table></div>
-      </div>
-    </div>
+    <div class="card pad detail" id="pinDetail" aria-live="polite"></div>
+    <div class="card pad stack fxcard" id="pinFx" aria-live="polite"></div>
   </div>
 </section>
 
@@ -305,7 +254,7 @@ footer .wrap{padding-block:18px}
   <div class="viewhead">
     <p class="eyebrow">Wiring bench</p>
     <h1>接線模擬</h1>
-    <p class="lead">先點元件的腳，再點板子上的腳，就會拉出一條線。點線可以拔掉。接好之後按「通電」，螢幕會照你的接線反應，接錯也會告訴你錯在哪。</p>
+    <p class="lead">先點螢幕的腳，再點板子上的腳，就會拉出一條線。點線可以拔掉。8 條線接完後按「通電」，接對了 Mochi 就會開機，接錯會跳出視窗告訴你哪裡要改。</p>
   </div>
   <div class="mission" id="mission"></div>
   <div class="row" style="margin-bottom:12px">
@@ -313,35 +262,66 @@ footer .wrap{padding-block:18px}
     <button class="btn" id="autoBtn" type="button">照 Mochi 排線接好</button>
     <button class="btn" id="clearBtn" type="button">全部拔掉</button>
     <label class="check" style="margin-left:6px"><input type="checkbox" id="hintChk" checked><span>顯示下一步提示</span></label>
-    <label class="check"><input type="checkbox" id="holdChk"><span>通電時按住按鈕</span></label>
+    <label class="check"><input type="checkbox" id="holdChk"><span>通電時按住 BOOT 鈕</span></label>
   </div>
   <div class="card bench"><div id="benchSvg"></div></div>
   <p class="note" style="margin-top:8px">螢幕窄的時候，圖可以左右滑動；也可以直接用下面的接線表。</p>
+
   <div class="wgrid">
     <div class="stack">
       <div class="card pad stack">
+        <div class="row between"><h3>Mochi 控制器</h3><span id="ctlPill"></span></div>
+        <p class="note" id="ctlNote"></p>
+        <div class="ctltop">
+          <div class="mini-lcd"><svg viewBox="0 0 240 240" id="ctlScreen" role="img" aria-label="Mochi 螢幕即時畫面"></svg><span class="note" style="font-size:12px;text-align:center">螢幕即時畫面</span></div>
+          <div class="ctl" id="ctlBtns" role="group" aria-label="Mochi 功能"></div>
+        </div>
+        <div class="row">
+          <button class="btn small" id="blBtn" type="button">螢幕：開</button>
+          <label class="row" style="gap:6px;font-size:13.5px">速度<select id="speedSel" style="padding:3px 6px;border-radius:7px;border:1px solid var(--line);background:var(--surface)"><option value="1">慢</option><option value="2">普通</option><option value="3">快</option></select></label>
+          <span class="row" id="bgSw" style="gap:7px" role="group" aria-label="背景顏色"></span>
+        </div>
+        <div id="termPanel" class="stack" hidden>
+          <form id="termForm" class="row" style="flex-wrap:nowrap">
+            <label class="field" style="flex:1"><input type="text" id="termIn" maxlength="40" autocomplete="off" placeholder="打字後按 Enter，會出現在螢幕的終端機上" aria-label="終端機輸入"></label>
+            <button class="btn" type="submit">送出</button>
+          </form>
+        </div>
+        <div id="drawPanel" class="stack" hidden>
+          <p class="note">在下面的方框裡畫，筆跡會同步出現在 Mochi 螢幕上。</p>
+          <div class="padbox" id="padBox"></div>
+          <div class="row"><span class="row" id="penSw" style="gap:7px" role="group" aria-label="筆的顏色"></span><button class="btn small" id="padClear" type="button">清除</button></div>
+        </div>
+      </div>
+      <div class="card pad stack">
         <h3>接線表</h3>
-        <p class="note">手機上直接用選單接線也可以，和上面的圖是同一份。</p>
         <div class="conn" id="connTable"></div>
       </div>
       <div class="card pad stack">
-        <h3>腳位預算</h3>
-        <p class="note" id="budgetText"></p>
-        <div class="budget" id="budget"></div>
-      </div>
-    </div>
-    <div class="stack">
-      <div class="card pad stack">
-        <div class="row" style="justify-content:space-between"><h3>診斷</h3><span id="lcdPill"></span></div>
-        <ul class="diag" id="diag"></ul>
-      </div>
-      <div class="card pad stack">
-        <h3>序列埠監控</h3>
+        <h3>訊息紀錄</h3>
         <div class="serial" id="serial" aria-live="polite"></div>
       </div>
+    </div>
+
+    <div class="stack">
       <div class="card pad stack">
-        <div class="row" style="justify-content:space-between"><h3>程式裡的腳位</h3><button class="btn small" id="copyCode" type="button">複製</button></div>
-        <p class="note">線和程式要對上。改這裡的數字，上面的檢查標準會跟著變。</p>
+        <div class="bigrow"><div><h3>空間預算：Flash</h3><div class="big" id="fPct">81%</div></div><span id="fPill"></span></div>
+        <p class="note">勾選要編進韌體的功能，看它們各佔多少。沒勾的功能，上面控制器裡的按鈕也會停用。</p>
+        <div class="fxrows" id="fxRows"></div>
+        <div class="barwrap"><div class="bar" id="fBar"></div><div class="limit" id="fLimit"><em></em></div></div>
+        <div class="legend" id="fLegend"></div>
+        <p class="note" id="fText"></p>
+        <label class="field"><span>分割表（Partition Scheme）</span><select id="mPart"></select></label>
+        <label class="field"><span>如果再存幾張 240 × 240 全彩圖片：<b id="imgV">0 張</b></span><input type="range" id="imgN" min="0" max="12" step="1" value="0"></label>
+        <div class="bigrow"><div><h3>RAM</h3><div class="big" id="rPct">11%</div></div><span id="rPill"></span></div>
+        <div class="barwrap"><div class="bar" id="rBar"></div><div class="limit" id="rLimit"><em></em></div></div>
+        <p class="note" id="rText"></p>
+        <ul class="advice" id="advice"></ul>
+        <p class="note">以上數字是把 Clawd Mochi 原始碼用 arduino-esp32 3.3.0 編譯給 ESP32-C3 實際量出來的，5 個功能的 32 種勾選組合都各編譯過一次。不同版本的核心或函式庫會有幾 KB 的差異。圖片是照 240 × 240 × 2 位元組計算。</p>
+      </div>
+      <div class="card pad stack">
+        <div class="row between"><h3>程式裡的腳位</h3><button class="btn small" id="copyCode" type="button">複製</button></div>
+        <p class="note">這是 Clawd Mochi 原始碼裡跟腳位有關的幾行。線和程式要對上；改這裡的數字，檢查標準會跟著變。</p>
         <div class="two" id="codePins"></div>
         <pre class="codeblock" id="codeView"></pre>
       </div>
@@ -349,134 +329,122 @@ footer .wrap{padding-block:18px}
   </div>
 </section>
 
-<!-- ================= MEMORY ================= -->
-<section class="view" id="view-memory" hidden>
-  <div class="viewhead">
-    <p class="eyebrow">Space budget</p>
-    <h1>空間預算</h1>
-    <p class="lead">SuperMini 有 4MB Flash，但程式能用的只有其中一塊分割區。把你想加的功能打開，看 Flash 和 RAM 剩多少。</p>
-  </div>
-  <div class="row" id="presets" style="margin-bottom:16px" role="group" aria-label="情境"></div>
-  <div class="mgrid">
-    <div class="card pad stack">
-      <label class="field"><span>分割表（Partition Scheme）</span><select id="mPart"></select><small>Arduino IDE：工具 → Partition Scheme。arduino-cli：FQBN 後面加 <span class="mono">:PartitionScheme=…</span></small></label>
-      <h3>連線功能</h3>
-      <label class="check"><input type="checkbox" id="mWifi"><span>WiFi<small>熱點或連路由器。Mochi 的網頁遙控版要開。</small></span></label>
-      <label class="check"><input type="checkbox" id="mWeb"><span>網頁伺服器<small>手機開網頁控制表情。需要 WiFi。</small></span></label>
-      <label class="check"><input type="checkbox" id="mBle"><span>藍牙 BLE<small>和 WiFi 一起開最容易爆。</small></span></label>
-      <h3>表情怎麼畫</h3>
-      <div class="two">
-        <label class="field"><span>圖片格式</span><select id="mFmt"><option value="0">不存圖，用程式畫</option><option value="16">全彩 RGB565（16-bit）</option><option value="1">單色（1-bit）</option></select></label>
-        <label class="field"><span>圖片尺寸</span><select id="mSize"><option value="240">240 × 240（全螢幕）</option><option value="120">120 × 120</option><option value="64">64 × 64</option></select></label>
-      </div>
-      <label class="field"><span>圖片張數：<b id="mFramesV">0</b></span><input type="range" id="mFrames" min="0" max="24" step="1" value="0"></label>
-      <label class="check"><input type="checkbox" id="mCanvas"><span>全螢幕畫布（GFXcanvas16）<small>先畫在記憶體再一次送出，畫面不閃，但很吃 RAM。</small></span></label>
-      <h3>中文字型</h3>
-      <div class="two">
-        <label class="field"><span>字數：<b id="mCharsV">0</b></span><input type="range" id="mChars" min="0" max="5000" step="100" value="0"></label>
-        <label class="field"><span>字級</span><select id="mPx"><option value="16">16 px</option><option value="24">24 px</option><option value="32">32 px</option></select></label>
-      </div>
-    </div>
-    <div class="stack">
-      <div class="card pad stack">
-        <div class="bigrow"><div><h3>Flash（程式儲存空間）</h3><div class="big" id="fPct">26%</div></div><span id="fPill"></span></div>
-        <div class="barwrap"><div class="bar" id="fBar"></div><div class="limit" id="fLimit"><em></em></div></div>
-        <div class="legend" id="fLegend"></div>
-        <p class="note" id="fText"></p>
-      </div>
-      <div class="card pad stack">
-        <div class="bigrow"><div><h3>RAM（動態記憶體）</h3><div class="big" id="rPct">4%</div></div><span id="rPill"></span></div>
-        <div class="barwrap"><div class="bar" id="rBar"></div><div class="limit" id="rLimit"><em></em></div></div>
-        <div class="legend" id="rLegend"></div>
-        <p class="note" id="rText"></p>
-      </div>
-      <div class="card pad stack">
-        <h3>4MB Flash 怎麼切</h3>
-        <div class="pmap" id="pMap"></div>
-        <p class="note" id="pText"></p>
-      </div>
-      <div class="card pad stack">
-        <h3>建議</h3>
-        <ul class="advice" id="advice"></ul>
-        <div class="calc" id="calc"></div>
-        <p class="note">「核心 + GFX + 螢幕驅動」和 RAM 的靜態用量，是顏文字遊戲在 ESP32-C3 上實際編譯出來的數字（341,634 與 15,212 位元組）。圖片和字型是照公式算的。WiFi、BLE、網頁伺服器是估算值，實際大小以你自己的編譯輸出為準。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 </main>
-<footer><div class="wrap">腳位資料依 ESP32-C3 常見的 SuperMini 版型整理；Mochi 排線採用 Clawd Mochi 專案公開的接法（MOSI 10、SCK 8、RES 2、DC 1、CS 4、BL 3）。學習進度只存在這台裝置的瀏覽器裡。</div></footer>
+<footer><div class="wrap">腳位資料依 ESP32-C3 常見的 SuperMini 版型整理。排線、功能與程式片段取自 Clawd Mochi 開源專案（MIT 授權，作者 Yousuf Amanuel）。模擬螢幕上的眼睛和 logo 動畫是示意造型，實機會畫專案自己的圖案。</div></footer>
+
+<div class="scrim" id="scrim" hidden><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div></div>
 <div class="toast" id="toast" hidden role="status"></div>
 
 <script>
 (function(){
 'use strict';
-/* ---------- storage ---------- */
 var NS='mochi-lab:';
 var store={get:function(k,d){try{var v=localStorage.getItem(NS+k);return v==null?d:JSON.parse(v);}catch(e){return d;}},
-           set:function(k,v){try{localStorage.setItem(NS+k,JSON.stringify(v));}catch(e){}},
-           clear:function(){try{Object.keys(localStorage).forEach(function(k){if(k.indexOf(NS)===0)localStorage.removeItem(k);});}catch(e){}}};
+           set:function(k,v){try{localStorage.setItem(NS+k,JSON.stringify(v));}catch(e){}}};
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function fmt(n){return Math.round(n).toLocaleString('en-US');}
 var toastT;
 function toast(msg){var t=$('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true;},2600);}
+var REDUCED=false;try{REDUCED=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+
+/* ---------- Mochi's five functions ---------- */
+var FX=[
+ {k:'normal',name:'一般眼睛',en:'Normal eyes',cmd:'/cmd?k=w',what:'左右擺動再眨兩下。每一格都是整個畫面重填，再畫兩塊眼睛。',color:'--s3'},
+ {k:'squish',name:'瞇眼',en:'Squish eyes',cmd:'/cmd?k=s',what:'> < 的開心瞇眼，開合三次。用很多條斜線疊出粗筆畫。',color:'--s4'},
+ {k:'code',name:'終端機',en:'Claude Code',cmd:'/cmd?k=d',what:'8 行 × 15 字的終端機，手機打的字一個一個送過來顯示。',color:'--s5'},
+ {k:'canvas',name:'畫布',en:'Canvas',cmd:'/canvas?on=1',what:'手機上畫的筆跡變成一段段座標，在螢幕上連成線。',color:'--s6'},
+ {k:'logo',name:'Logo 動畫',en:'Logo reveal',cmd:'/cmd?k=a',what:'開機時一筆一筆描出 logo。圖形是 162 段線條的座標表，不是圖片。',color:'--s7'}
+];
+var FXI={};FX.forEach(function(f,i){FXI[f.k]=i;});
 
 /* ---------- pin data ---------- */
 var CATS={power:{name:'電源',color:'var(--c-power)'},gnd:{name:'接地',color:'var(--c-gnd)'},safe:{name:'安全首選',color:'var(--c-safe)'},
           adc:{name:'類比輸入',color:'var(--c-plain)'},strap:{name:'開機腳位',color:'var(--c-strap)'},comm:{name:'通訊預設',color:'var(--c-comm)'},
           mochi:{name:'Mochi 用到',color:'var(--accent)'}};
 var PRIMNAME={power:'電源',gnd:'接地',safe:'安全首選',strap:'開機腳位',comm:'通訊預設',plain:'可用，有附帶功能'};
+var ALL5=['normal','squish','code','canvas','logo'];
 var PINS=[
  {id:'GPIO5',silk:'5',side:'L',row:0,prim:'plain',cats:['adc','comm'],adc:'ADC2_CH0',alt:'預設 SPI MISO、JTAG MTDI',
-  sum:'一般數位腳。也能讀類比，但它屬於 ADC2，WiFi 開著的時候讀值不可靠。',can:'數位輸入輸出、PWM',warn:'要讀類比訊號請改用 GPIO 0–4。',mochi:'空著。',code:'pinMode(5, OUTPUT);'},
+  sum:'一般數位腳。也能讀類比，但它屬於 ADC2，WiFi 開著的時候讀值不可靠。',can:'數位輸入輸出、PWM',warn:'Mochi 一直開著 WiFi 熱點，所以這根在 Mochi 上不適合讀類比。',code:'pinMode(5, OUTPUT);',
+  role:'',fx:[],fxNote:'Mochi 沒用到。螢幕只寫不讀，所以 SPI 的 MISO 不需要接。',idea:'可以接一顆蜂鳴器，讓 Mochi 眨眼時嗶一聲。'},
  {id:'GPIO6',silk:'6',side:'L',row:1,prim:'plain',cats:['comm'],alt:'預設 SPI MOSI、JTAG MTCK',
-  sum:'一般數位腳。Arduino 預設把它當 SPI 的 MOSI，不過 C3 的 SPI 可以改到任何腳。',can:'數位輸入輸出、PWM',warn:'',mochi:'空著。Mochi 的 SPI 改用 GPIO 8 和 10。',code:'pinMode(6, OUTPUT);'},
+  sum:'一般數位腳。Arduino 預設把它當 SPI 的 MOSI，不過 C3 的 SPI 可以改到任何腳。',can:'數位輸入輸出、PWM',warn:'',code:'pinMode(6, OUTPUT);',
+  role:'',fx:[],fxNote:'Mochi 沒用到。它的 SPI 改用 GPIO 8 和 10，專案說明特別提醒不要用 6、7 接螢幕。',idea:'可以接一顆 LED 當狀態燈。'},
  {id:'GPIO7',silk:'7',side:'L',row:2,prim:'plain',cats:['comm'],alt:'預設 SPI SS、JTAG MTDO',
-  sum:'一般數位腳。不用外接 JTAG 除錯器的話可以放心用。',can:'數位輸入輸出、PWM',warn:'',mochi:'空著。',code:'pinMode(7, OUTPUT);'},
+  sum:'一般數位腳。不用外接 JTAG 除錯器的話可以放心用。',can:'數位輸入輸出、PWM',warn:'',code:'pinMode(7, OUTPUT);',
+  role:'',fx:[],fxNote:'Mochi 沒用到。',idea:'可以接震動感測器，拍一下桌子就換表情。'},
  {id:'GPIO8',silk:'8',side:'L',row:3,prim:'strap',cats:['strap','comm','mochi'],alt:'板上藍色 LED（低電位亮）、預設 I2C SDA',
-  sum:'開機腳位，同時接著板上的藍色 LED。當輸出用的時候，LED 會跟著訊號閃。',can:'數位輸出、PWM、I2C',warn:'開機瞬間如果 GPIO 9 是低電位，GPIO 8 必須是高電位才進得了燒錄模式。不要外接會把它拉低的元件。',mochi:'螢幕 SCL（時脈）。所以 Mochi 畫圖時藍燈會微微閃，是正常的。',code:'digitalWrite(8, LOW);  // 藍燈亮'},
- {id:'GPIO9',silk:'9',side:'L',row:4,prim:'strap',cats:['strap','comm','mochi'],alt:'BOOT 按鈕、內建上拉、預設 I2C SCL',
-  sum:'開機腳位，接著板上的 BOOT 鈕。平常是高電位，按下去變低電位。',can:'按鈕輸入（開機完成後）',warn:'通電那一瞬間如果是低電位，板子會進燒錄模式，你的程式不會跑。開機時不要按著它。',mochi:'顏文字遊戲的按鈕。直接用板上的 BOOT 鈕也行。',code:'pinMode(9, INPUT_PULLUP);  // 按下 = LOW'},
+  sum:'開機腳位，同時接著板上的藍色 LED。當輸出用的時候，LED 會跟著訊號閃。',can:'數位輸出、PWM、I2C',warn:'開機瞬間如果 GPIO 9 是低電位，GPIO 8 必須是高電位才進得了燒錄模式。不要外接會把它拉低的元件。',code:'SPI.begin(8, -1, 10, TFT_CS);  // SCK = 8',
+  role:'螢幕 SCL（SPI 時脈）',fx:ALL5,fxNote:'每送一個位元，這根就跳一下。Mochi 把時脈設到 40 MHz，所以整個畫面重填一次只要幾十毫秒，眼睛動畫才不會卡。畫面更新時板上藍燈會跟著微微閃。'},
+ {id:'GPIO9',silk:'9',side:'L',row:4,prim:'strap',cats:['strap','comm'],alt:'BOOT 按鈕、內建上拉、預設 I2C SCL',
+  sum:'開機腳位，接著板上的 BOOT 鈕。平常是高電位，按下去變低電位。',can:'按鈕輸入（開機完成後）',warn:'通電那一瞬間如果是低電位，板子會進燒錄模式，你的程式不會跑。開機時不要按著它。',code:'pinMode(9, INPUT_PULLUP);  // 按下 = LOW',
+  role:'',fx:[],fxNote:'Mochi 的 5 個功能都不用這根，它全靠手機網頁控制。但燒錄韌體時會用到：按住 BOOT 再插 USB，就進燒錄模式。',idea:'板上的 BOOT 鈕是現成的實體按鍵，可以拿來切換表情，不用多接任何線。'},
  {id:'GPIO10',silk:'10',side:'L',row:5,prim:'safe',cats:['safe','mochi'],alt:'無',
-  sum:'最乾淨的一根腳：沒有開機任務、沒接板上元件、也不是預設通訊腳。',can:'數位輸入輸出、PWM',warn:'',mochi:'螢幕 SDA（資料 MOSI）。',code:'pinMode(10, OUTPUT);'},
+  sum:'最乾淨的一根腳：沒有開機任務、沒接板上元件、也不是預設通訊腳。',can:'數位輸入輸出、PWM',warn:'',code:'SPI.begin(8, -1, 10, TFT_CS);  // MOSI = 10',
+  role:'螢幕 SDA（SPI 資料 MOSI）',fx:ALL5,fxNote:'螢幕上每一個像素的顏色都從這根送出去。全螢幕 240 × 240 個像素、每個 2 位元組，重填一次就是 115,200 位元組的資料。'},
  {id:'GPIO20',silk:'20',side:'L',row:6,prim:'comm',cats:['comm'],alt:'UART0 RX',
-  sum:'硬體序列埠的接收腳。用 USB 看序列埠監控時，這根其實空著，可以當一般 GPIO。',can:'UART 接收、數位輸入輸出',warn:'接了 GPS、藍牙模組這類 UART 裝置時就別再挪用。',mochi:'空著。',code:'Serial1.begin(9600, SERIAL_8N1, 20, 21);'},
+  sum:'硬體序列埠的接收腳。用 USB 看序列埠監控時，這根其實空著，可以當一般 GPIO。',can:'UART 接收、數位輸入輸出',warn:'',code:'Serial1.begin(9600, SERIAL_8N1, 20, 21);',
+  role:'',fx:[],fxNote:'Mochi 沒用到。它的板子設定開了 USB CDC On Boot，序列埠訊息直接走 USB 線。',idea:'可以接其他裝置的 UART，讓另一塊板子指揮 Mochi 換表情。'},
  {id:'GPIO21',silk:'21',side:'L',row:7,prim:'comm',cats:['comm'],alt:'UART0 TX',
-  sum:'硬體序列埠的傳送腳。開機時晶片會從這根吐出一小段開機訊息。',can:'UART 傳送、數位輸入輸出',warn:'接在這根的元件，開機瞬間會收到幾個雜訊脈衝。',mochi:'空著。',code:'Serial1.begin(9600, SERIAL_8N1, 20, 21);'},
+  sum:'硬體序列埠的傳送腳。開機時晶片會從這根吐出一小段開機訊息。',can:'UART 傳送、數位輸入輸出',warn:'接在這根的元件，開機瞬間會收到幾個雜訊脈衝。',code:'Serial1.begin(9600, SERIAL_8N1, 20, 21);',
+  role:'',fx:[],fxNote:'Mochi 沒用到。',idea:'和 GPIO 20 一組，留給 UART 模組。'},
  {id:'5V',silk:'5V',side:'R',row:0,prim:'power',cats:['power'],alt:'USB 5V',
-  sum:'USB 插著時這裡有 5V。可以供電給需要 5V 的模組，也可以從這裡用外部 5V 餵板子。',can:'5V 輸出或輸入',warn:'不能接到任何 GPIO，也不能當 Mochi 螢幕的 VCC。GPIO 只承受 3.3V。',mochi:'不接。',code:''},
+  sum:'USB 插著時這裡有 5V。可以供電給需要 5V 的模組，也可以從這裡用外部 5V 餵板子。',can:'5V 輸出或輸入',warn:'不能接到任何 GPIO，也不能當 Mochi 螢幕的 VCC。GPIO 只承受 3.3V。',code:'',
+  role:'',fx:[],fxNote:'沒有線接到這裡。Mochi 整隻靠 USB-C 供電，5V 進來後由板上穩壓器降成 3.3V 再給螢幕。',idea:''},
  {id:'GND',silk:'G',side:'R',row:1,prim:'gnd',cats:['power','mochi'],alt:'接地',
-  sum:'所有元件的電都要流回這裡。螢幕、按鈕、感測器的 GND 全部接在一起，叫做共地。',can:'共地',warn:'沒共地的話，訊號再對也讀不到。',mochi:'螢幕 GND，還有按鈕的另一腳。',code:''},
+  sum:'所有元件的電都要流回這裡。螢幕、按鈕、感測器的 GND 全部接在一起，叫做共地。',can:'共地',warn:'沒共地的話，訊號再對也讀不到。',code:'',
+  role:'螢幕 GND',fx:ALL5,fxNote:'螢幕的電源回路，也是 6 條訊號線的電位基準。少了它，5 個功能全部沒畫面。'},
  {id:'3V3',silk:'3.3',side:'R',row:2,prim:'power',cats:['power','mochi'],alt:'穩壓器 3.3V 輸出',
-  sum:'板上穩壓器輸出的 3.3V，給螢幕和感測器用。',can:'3.3V 輸出',warn:'供電能力有限。馬達、長燈條不要從這裡取電。',mochi:'螢幕 VCC。',code:''},
+  sum:'板上穩壓器輸出的 3.3V，給螢幕和感測器用。',can:'3.3V 輸出',warn:'供電能力有限。馬達、長燈條不要從這裡取電。',code:'',
+  role:'螢幕 VCC',fx:ALL5,fxNote:'螢幕的電源。專案說明寫得很明白：只能接 3.3V，絕對不要接 5V。'},
  {id:'GPIO4',silk:'4',side:'R',row:3,prim:'safe',cats:['safe','adc','comm','mochi'],adc:'ADC1_CH4',alt:'預設 SPI SCK、JTAG MTMS',
-  sum:'好用的通用腳，能讀類比。不用 JTAG 除錯器就沒有顧慮。',can:'數位輸入輸出、PWM、類比輸入',warn:'',mochi:'螢幕 CS（片選）。',code:'int v = analogRead(4);'},
+  sum:'好用的通用腳，能讀類比。不用 JTAG 除錯器就沒有顧慮。',can:'數位輸入輸出、PWM、類比輸入',warn:'',code:'#define TFT_CS  4',
+  role:'螢幕 CS（片選）',fx:ALL5,fxNote:'拉低代表「接下來的資料是給你的」。Mochi 只有一個 SPI 裝置，但每次畫圖前後還是會切換這根。'},
  {id:'GPIO3',silk:'3',side:'R',row:4,prim:'safe',cats:['safe','adc','mochi'],adc:'ADC1_CH3',alt:'無',
-  sum:'通用腳，能讀類比，沒有開機任務。',can:'數位輸入輸出、PWM、類比輸入',warn:'',mochi:'螢幕 BLK（背光）。拉高就亮，接 PWM 可以調亮度。',code:'analogWrite(3, 128);  // 半亮'},
+  sum:'通用腳，能讀類比，沒有開機任務。',can:'數位輸入輸出、PWM、類比輸入',warn:'',code:'digitalWrite(TFT_BLK, on ? HIGH : LOW);',
+  role:'螢幕 BL（背光）',fx:ALL5,fxNote:'拉高背光才亮，5 個功能才看得到。手機控制器上的「display on / off」按鈕，就是在切換這一根腳的高低。'},
  {id:'GPIO2',silk:'2',side:'R',row:5,prim:'strap',cats:['strap','adc','mochi'],adc:'ADC1_CH2',alt:'開機時需為高電位',
-  sum:'開機腳位。開機完成後可以當一般腳，也能讀類比。',can:'數位輸出、類比輸入（開機後）',warn:'通電瞬間要維持高電位。外接元件如果把它拉低，板子可能開不了機。',mochi:'螢幕 RES（重置）。重置線平常就是高電位，剛好不衝突。',code:'pinMode(2, OUTPUT);'},
+  sum:'開機腳位。開機完成後可以當一般腳，也能讀類比。',can:'數位輸出、類比輸入（開機後）',warn:'通電瞬間要維持高電位。外接元件如果把它拉低，板子可能開不了機。',code:'#define TFT_RST 2',
+  role:'螢幕 RST（重置）',fx:ALL5,fxNote:'只在開機時用一次：tft.init() 把它拉低再放開，讓螢幕晶片重新開始。之後一直維持高電位，所以不會和開機腳位的要求衝突。'},
  {id:'GPIO1',silk:'1',side:'R',row:6,prim:'safe',cats:['safe','adc','mochi'],adc:'ADC1_CH1',alt:'無',
-  sum:'通用腳，能讀類比，沒有開機任務。',can:'數位輸入輸出、PWM、類比輸入',warn:'',mochi:'螢幕 DC（告訴螢幕現在送的是資料還是命令）。',code:'pinMode(1, OUTPUT);'},
+  sum:'通用腳，能讀類比，沒有開機任務。',can:'數位輸入輸出、PWM、類比輸入',warn:'',code:'#define TFT_DC  1',
+  role:'螢幕 DC（資料 / 命令）',fx:ALL5,fxNote:'低電位表示送的是命令（例如「接下來要畫這個矩形範圍」），高電位表示送的是像素顏色。每畫一個圖形就切換好幾次。'},
  {id:'GPIO0',silk:'0',side:'R',row:7,prim:'safe',cats:['safe','adc'],adc:'ADC1_CH0',alt:'無',
-  sum:'通用腳，能讀類比，沒有開機任務。',can:'數位輸入輸出、PWM、類比輸入',warn:'',mochi:'空著。接完 Mochi 螢幕後，這是唯一剩下的類比腳，留給你的下一個感測器。',code:'int v = analogRead(0);'}
+  sum:'通用腳，能讀類比，沒有開機任務。',can:'數位輸入輸出、PWM、類比輸入',warn:'',code:'int v = analogRead(0);',
+  role:'',fx:[],fxNote:'Mochi 沒用到。接完螢幕後，這是唯一剩下、WiFi 開著也能讀類比的腳。',idea:'可以接一顆可變電阻，用旋鈕調動畫速度，取代控制器上的速度選單。'}
 ];
 var PIN={};PINS.forEach(function(p){PIN[p.id]=p;});
 var GPIO_NUMS=[0,1,2,3,4,5,6,7,8,9,10,20,21];
 
-/* ---------- state ---------- */
-var DEFAULT_CODE={MOSI:10,SCLK:8,RST:2,DC:1,CS:4,BL:3,BTN:9};
-var state={
-  flags:store.get('flags',{}), quiz:store.get('quiz',{}), viewed:store.get('viewed',[]),
-  open:store.get('open',0),
-  wires:store.get('wires',{VCC:'3V3',GND:'GND'}),
-  code:Object.assign({},DEFAULT_CODE,store.get('code',{})),
-  mem:Object.assign({part:'default',wifi:false,web:false,ble:false,fmt:0,size:240,frames:0,canvas:false,chars:0,px:16},store.get('mem',{})),
-  pinSel:store.get('pinSel','GPIO10'), filter:'all',
-  sel:null, powered:false, lcd:'off', face:-1, faceCount:0, btnOk:false, serial:[], hint:true, hold:false, down:false
+/* ---------- measured sizes (bytes): index = bitmask of FX order normal,squish,code,canvas,logo ---------- */
+var MEAS=[[1056840,37144],[1057348,37144],[1057602,37144],[1058064,37144],[1059666,37152],[1060172,37152],[1060418,37152],[1060884,37152],[1059114,37144],[1059618,37144],[1059872,37144],[1060328,37144],[1061942,37152],[1062452,37152],[1062698,37152],[1063158,37152],[1061332,37144],[1061784,37144],[1062050,37144],[1062498,37144],[1064142,37152],[1064598,37152],[1064854,37152],[1065310,37152],[1063606,37144],[1064060,37144],[1064320,37144],[1064768,37144],[1066424,37152],[1066878,37152],[1067134,37152],[1067586,37152]];
+var BASE={flash:348020,ram:14000};
+var HTML_BYTES=17242;
+var RAM_TOTAL=327680;
+var PART={
+  'default':{name:'Default 4MB（1.2MB APP × 2，可 OTA）',app:1310720,ota:true},
+  'min_spiffs':{name:'Minimal SPIFFS（1.9MB APP × 2，可 OTA）',app:1966080,ota:true},
+  'no_ota':{name:'No OTA（2MB APP / 2MB SPIFFS）',app:2097152,ota:false},
+  'huge_app':{name:'Huge APP（3MB APP，不可 OTA）',app:3145728,ota:false}
 };
-function setFlag(k){if(!state.flags[k]){state.flags[k]=true;store.set('flags',state.flags);renderLessons();}}
+
+/* ---------- state ---------- */
+var DEFAULT_CODE={MOSI:10,SCLK:8,RST:2,DC:1,CS:4,BL:3};
+var BGS=['#2E86AB','#E9A23B','#3FA36C','#D9638A','#0B1320'];
+var PENS=['#FFFFFF','#0B1320','#FFD23F'];
+var savedW=store.get('wires',{VCC:'3V3',GND:'GND'});delete savedW.B1;delete savedW.B2;
+var state={
+  wires:savedW,
+  code:Object.assign({},DEFAULT_CODE,store.get('code',{})),
+  feat:Object.assign({normal:true,squish:true,code:true,canvas:true,logo:true},store.get('feat',{})),
+  part:store.get('part','default'), imgs:0,
+  pinSel:store.get('pinSel','GPIO10'), filter:'all',
+  sel:null, powered:false, lcd:'off', boot:null, serial:[], hint:true, hold:false,
+  view:'none', ready:false, bl:true, speed:1, bg:BGS[0], pen:PENS[0],
+  term:{lines:['','','','','','','',''],row:0,col:0}, strokes:[], eyes:{ox:0,blink:false,closed:false}, logoN:0
+};
+delete state.code.BTN;
 
 /* ---------- board drawing ---------- */
 function padXY(p){return {x:p.side==='L'?16:164,y:44+p.row*24.5};}
@@ -486,7 +454,7 @@ function boardMarkup(bx,by,mode){
   s+='<rect x="60" y="-9" width="60" height="38" rx="7" fill="#B7C1CC" stroke="#7E8A96"/><rect x="70" y="-4" width="40" height="9" rx="4" fill="#3A444F"/>';
   s+='<text class="silk sm" x="90" y="42" text-anchor="middle">USB-C</text>';
   s+='<rect x="58" y="92" width="64" height="64" rx="5" fill="#2A3440" stroke="#4B5B6C"/><text class="silk sm" x="90" y="121" text-anchor="middle">ESP32</text><text class="silk sm" x="90" y="133" text-anchor="middle">C3</text>';
-  s+='<circle class="led'+(mode==='wire'?' ':' ')+'" id="'+(mode==='wire'?'wLed':'pLed')+'" cx="46" cy="118" r="4.5"/><text class="silk sm" x="46" y="107" text-anchor="middle">LED</text>';
+  s+='<circle class="led" id="'+(mode==='wire'?'wLed':'pLed')+'" cx="46" cy="118" r="4.5"/><text class="silk sm" x="46" y="107" text-anchor="middle">LED</text>';
   s+='<rect x="72" y="212" width="36" height="12" rx="2" fill="#B5412F"/><text class="silk sm" x="90" y="237" text-anchor="middle">ANT</text>';
   s+='<rect x="60" y="168" width="20" height="16" rx="3" fill="#C9D2DB"/><circle cx="70" cy="176" r="4.5" fill="#2A333D"/><text class="silk sm" x="70" y="196" text-anchor="middle">BOOT</text>';
   s+='<rect x="100" y="168" width="20" height="16" rx="3" fill="#C9D2DB"/><circle cx="110" cy="176" r="4.5" fill="#2A333D"/><text class="silk sm" x="110" y="196" text-anchor="middle">RST</text>';
@@ -528,72 +496,49 @@ function updatePinBoard(){
 function renderPinDetail(){
   var p=PIN[state.pinSel]||PINS[0];
   var tags=p.cats.map(function(c){return '<span class="tag" style="background:'+CATS[c].color+'">'+CATS[c].name+'</span>';}).join(' ');
-  if(p.prim==='gnd')tags='<span class="tag" style="background:var(--c-gnd)">接地</span> '+(p.cats.indexOf('mochi')>=0?'<span class="tag" style="background:var(--accent)">Mochi 用到</span>':'');
+  if(p.prim==='gnd')tags='<span class="tag" style="background:var(--c-gnd)">接地</span> <span class="tag" style="background:var(--accent)">Mochi 用到</span>';
   var h='<h2><span class="mono">'+p.id+'</span>'+tags+'</h2>';
   h+='<p style="margin:10px 0 14px">'+p.sum+'</p><dl class="kv">';
   h+='<dt>可以做</dt><dd>'+p.can+'</dd>';
   if(p.adc)h+='<dt>類比通道</dt><dd class="mono">'+p.adc+'</dd>';
-  h+='<dt>附帶功能</dt><dd>'+p.alt+'</dd>';
-  h+='<dt>在 Mochi 裡</dt><dd>'+p.mochi+'</dd></dl>';
+  h+='<dt>附帶功能</dt><dd>'+p.alt+'</dd></dl>';
   if(p.warn)h+='<div class="callout '+(p.prim==='strap'||p.prim==='power'?'warn':'info')+'" style="margin-top:14px"><b>注意　</b>'+p.warn+'</div>';
   if(p.code)h+='<pre class="codeblock" style="margin-top:14px">'+esc(p.code)+'</pre>';
   $('pinDetail').innerHTML=h;
+  // Mochi functions panel
+  var used=p.fx.length>0;
+  var f='<div><p class="eyebrow">在 Mochi 裡</p><h3 style="margin-top:4px">'+(used?p.role:'沒有接線')+'</h3></div>';
+  f+='<p style="font-size:14.5px">'+p.fxNote+'</p>';
+  f+='<ul class="fxlist">'+FX.map(function(x,i){var u=p.fx.indexOf(x.k)>=0;
+    return '<li class="'+(u?'use':'')+'"><span class="dot" aria-hidden="true">'+(i+1)+'</span><div><b>'+x.name+'　<span class="mono" style="font-weight:400;font-size:12px">'+x.en+'</span></b>'+(u?'<small>'+x.what+'</small>':'<small>不經過這根腳</small>')+'</div></li>';}).join('')+'</ul>';
+  if(used)f+='<p class="note">5 個功能都要在螢幕上畫東西，所以螢幕的 8 條線每一條都少不了。</p>';
+  if(p.idea)f+='<div class="callout info"><b>可以拿來加什麼　</b>'+p.idea+'</div>';
+  f+='<a class="btn small" href="#wiring" style="align-self:flex-start;text-decoration:none">去接線模擬試試</a>';
+  $('pinFx').innerHTML=f;
 }
-function renderPinTable(){
-  var order=PINS.slice().sort(function(a,b){return (a.side===b.side?a.row-b.row:(a.side==='R'?-1:1));});
-  var h='<thead><tr><th>腳位</th><th>分類</th><th>附帶功能</th><th>Mochi</th></tr></thead><tbody>';
-  order.forEach(function(p){h+='<tr data-row="'+p.id+'"><td class="mono"><b>'+p.id+'</b></td><td>'+PRIMNAME[p.prim]+'</td><td>'+p.alt+'</td><td>'+p.mochi.replace(/。.*$/,'')+'</td></tr>';});
-  $('pinTable').innerHTML=h+'</tbody>';
-}
-function selectPin(id){
-  state.pinSel=id;store.set('pinSel',id);
-  if(state.viewed.indexOf(id)<0){state.viewed.push(id);store.set('viewed',state.viewed);if(state.viewed.length>=5)setFlag('pins5');renderLessons();}
-  updatePinBoard();renderPinDetail();
-}
+function selectPin(id){state.pinSel=id;store.set('pinSel',id);updatePinBoard();renderPinDetail();}
 
 /* ================= WIRING ================= */
-var BX=330,BY=74;
-var SCR={x:690,y:58,w:212,h:262};
+var BX=120,BY=74;
+var SCR={x:520,y:58,w:212,h:262};
 var SCR_PINS=['GND','VCC','SCL','SDA','RES','DC','CS','BLK'];
-var COMP={GND:{name:'GND',color:'var(--w-gnd)',desc:'螢幕 GND'},VCC:{name:'VCC',color:'#E5484D',desc:'螢幕 VCC'},SCL:{name:'SCL',color:'#2FA36B',desc:'螢幕 SCL（時脈）'},
-  SDA:{name:'SDA',color:'#F08C2E',desc:'螢幕 SDA（資料）'},RES:{name:'RES',color:'#9B6BF2',desc:'螢幕 RES（重置）'},DC:{name:'DC',color:'#3B82F6',desc:'螢幕 DC'},
-  CS:{name:'CS',color:'#14A3B8',desc:'螢幕 CS（片選）'},BLK:{name:'BLK',color:'#D9A400',desc:'螢幕 BLK（背光）'},
-  B1:{name:'按鈕 A',color:'#E056A0',desc:'按鈕 A 腳'},B2:{name:'按鈕 B',color:'#8E6F5A',desc:'按鈕 B 腳'}};
-var COMP_ORDER=SCR_PINS.concat(['B1','B2']);
+var COMP={GND:{color:'var(--w-gnd)',desc:'螢幕 GND'},VCC:{color:'#E5484D',desc:'螢幕 VCC'},SCL:{color:'#2FA36B',desc:'螢幕 SCL（時脈）'},
+  SDA:{color:'#F08C2E',desc:'螢幕 SDA（資料）'},RES:{color:'#9B6BF2',desc:'螢幕 RES（重置）'},DC:{color:'#3B82F6',desc:'螢幕 DC'},
+  CS:{color:'#14A3B8',desc:'螢幕 CS（片選）'},BLK:{color:'#D9A400',desc:'螢幕 BLK（背光）'}};
 var LCD={x:SCR.x+62,y:SCR.y+26,w:136,h:136};
-var FACES=['~~/==/ww','(^ww^)','OwO','-_-zzZ','T_T'];
-function compXY(id){
-  if(id==='B1')return {x:156,y:176};
-  if(id==='B2')return {x:156,y:212};
-  return {x:SCR.x+14,y:SCR.y+34+SCR_PINS.indexOf(id)*27};
-}
+function compXY(id){return {x:SCR.x+14,y:SCR.y+34+SCR_PINS.indexOf(id)*27};}
 function boardXY(id){var q=padXY(PIN[id]);return {x:BX+q.x,y:BY+q.y};}
 function routePath(cid,bid){
-  var c=compXY(cid),b=boardXY(bid),L=PIN[bid].side==='L',pts;
-  var bottom=BY+250;
-  if(cid==='B1'||cid==='B2'){
-    var m=cid==='B1'?0:1,lane=204+m*15;
-    if(L)pts=[[c.x,c.y],[lane,c.y],[lane,b.y],[b.x,b.y]];
-    else pts=[[c.x,c.y],[lane,c.y],[lane,bottom+92+m*11],[BX+180+14+m*11,bottom+92+m*11],[BX+180+14+m*11,b.y],[b.x,b.y]];
-  }else{
-    var i=SCR_PINS.indexOf(cid),lx=566+i*13;
-    if(L)pts=[[b.x,b.y],[BX-16-i*9,b.y],[BX-16-i*9,bottom+14+i*9],[lx,bottom+14+i*9],[lx,c.y],[c.x,c.y]];
-    else pts=[[b.x,b.y],[lx,b.y],[lx,c.y],[c.x,c.y]];
-  }
+  var c=compXY(cid),b=boardXY(bid),L=PIN[bid].side==='L',pts,bottom=BY+250,i=SCR_PINS.indexOf(cid),lx=340+i*14;
+  if(L)pts=[[b.x,b.y],[BX-16-i*9,b.y],[BX-16-i*9,bottom+14+i*9],[lx,bottom+14+i*9],[lx,c.y],[c.x,c.y]];
+  else pts=[[b.x,b.y],[lx,b.y],[lx,c.y],[c.x,c.y]];
   return 'M'+pts.map(function(p){return p[0]+' '+p[1];}).join(' L');
 }
 function benchMarkup(){
-  var s='<svg viewBox="0 0 920 470" role="group" aria-label="接線工作台">';
-  s+='<defs><clipPath id="lcdClip"><rect x="'+LCD.x+'" y="'+LCD.y+'" width="'+LCD.w+'" height="'+LCD.h+'"/></clipPath></defs>';
-  s+='<rect class="benchbg" x="0" y="0" width="920" height="470"/>';
-  for(var gy=30;gy<470;gy+=40)for(var gx=30;gx<920;gx+=40)s+='<circle class="grid-dot" cx="'+gx+'" cy="'+gy+'" r="1"/>';
-  // button
-  s+='<g><rect class="btn-base" x="62" y="150" width="88" height="88" rx="9"/><circle id="btnCap" class="btn-cap" cx="106" cy="194" r="27" tabindex="0" role="button" aria-label="按下按鈕"/>';
-  s+='<text class="comp-cap" x="106" y="262" text-anchor="middle">按鈕（點紅色鍵帽按下）</text>';
-  ['B1','B2'].forEach(function(id){var q=compXY(id);
-    s+='<g class="cpin" data-comp="'+id+'" tabindex="0" role="button" aria-label="'+COMP[id].desc+'"><rect x="146" y="'+(q.y-5)+'" width="14" height="10" fill="#AEB9C4"/><circle class="padc" cx="'+q.x+'" cy="'+q.y+'" r="7"/><circle class="ring" cx="'+q.x+'" cy="'+q.y+'" r="11"/><text class="comp-cap" x="'+(q.x-22)+'" y="'+(q.y-12)+'" text-anchor="end" style="font-size:10px">'+(id==='B1'?'A':'B')+'</text><rect x="'+(q.x-13)+'" y="'+(q.y-13)+'" width="26" height="26" fill="transparent"/></g>';});
-  s+='</g>';
-  // screen
+  var s='<svg viewBox="0 0 760 420" role="group" aria-label="接線工作台">';
+  s+='<defs><clipPath id="lcdClip"><rect x="0" y="0" width="240" height="240"/></clipPath></defs>';
+  s+='<rect class="benchbg" x="0" y="0" width="760" height="420"/>';
+  for(var gy=30;gy<420;gy+=40)for(var gx=20;gx<760;gx+=40)s+='<circle class="grid-dot" cx="'+gx+'" cy="'+gy+'" r="1"/>';
   s+='<g><rect class="comp-body" x="'+SCR.x+'" y="'+SCR.y+'" width="'+SCR.w+'" height="'+SCR.h+'" rx="10"/>';
   s+='<rect x="'+(LCD.x-5)+'" y="'+(LCD.y-5)+'" width="'+(LCD.w+10)+'" height="'+(LCD.h+10)+'" rx="6" fill="#0A0E13"/><g id="lcd"></g>';
   s+='<text class="comp-text" x="'+(LCD.x+LCD.w/2)+'" y="'+(LCD.y+LCD.h+26)+'" text-anchor="middle">ST7789 1.54" 240x240</text>';
@@ -608,118 +553,188 @@ function benchMarkup(){
 }
 function renderWires(){
   var s='';
-  COMP_ORDER.forEach(function(cid){var b=state.wires[cid];if(!b)return;var d=routePath(cid,b);
+  SCR_PINS.forEach(function(cid){var b=state.wires[cid];if(!b)return;var d=routePath(cid,b);
     s+='<g data-wire="'+cid+'"><title>'+COMP[cid].desc+' → '+b+'（點一下拔掉）</title><path class="wire-hit" d="'+d+'"/><path class="wire" d="'+d+'" stroke="'+COMP[cid].color+'"/></g>';});
   $('wires').innerHTML=s;
 }
-function expected(){var c=state.code;return {VCC:'3V3',GND:'GND',SCL:'GPIO'+c.SCLK,SDA:'GPIO'+c.MOSI,RES:'GPIO'+c.RST,DC:'GPIO'+c.DC,CS:'GPIO'+c.CS,BLK:'GPIO'+c.BL,B1:'GPIO'+c.BTN,B2:'GND'};}
-function buttonLegs(){
-  var a=state.wires.B1,b=state.wires.B2,legs=[a,b].filter(Boolean);
-  var g=legs.filter(function(x){return x.indexOf('GPIO')===0;});
-  return {gpio:g.length===1?g[0]:null,gnd:legs.indexOf('GND')>=0,v33:legs.indexOf('3V3')>=0||legs.indexOf('5V')>=0,count:legs.length,twoGpio:g.length===2};
-}
+function expected(){var c=state.code;return {VCC:'3V3',GND:'GND',SCL:'GPIO'+c.SCLK,SDA:'GPIO'+c.MOSI,RES:'GPIO'+c.RST,DC:'GPIO'+c.DC,CS:'GPIO'+c.CS,BLK:'GPIO'+c.BL};}
 function evaluate(){
   var w=state.wires,c=state.code,items=[];
-  function add(lv,t,d){items.push({lv:lv,t:t,d:d||''});}
+  function add(lv,t,d,h){items.push({lv:lv,t:t,d:d||'',h:h||''});}
   var power=true,burn=false;
-  if(!w.VCC){add('err','螢幕 VCC 沒接','螢幕沒有電。把 VCC 接到 3V3。');power=false;}
-  else if(w.VCC==='5V'){add('err','VCC 接到 5V','這塊螢幕只能吃 3.3V，接 5V 有機會燒壞。改接 3V3。');power=false;burn=true;}
-  else if(w.VCC!=='3V3'){add('err','VCC 接在 '+w.VCC,w.VCC==='GND'?'電源正極接到地，螢幕不會亮。改接 3V3。':'GPIO 的電流不夠當電源。改接 3V3。');power=false;}
-  else add('ok','VCC → 3V3');
-  if(!w.GND){add('err','螢幕 GND 沒接','電流沒有回路。把 GND 接到板子的 GND。');power=false;}
-  else if(w.GND!=='GND'){add('err','GND 接在 '+w.GND,'接地只能接板子的 GND。');power=false;}
-  else add('ok','GND → GND');
+  if(!w.VCC){add('err','螢幕 VCC 沒接','螢幕沒有電源，所以完全不會亮。','把 VCC 接到板子右排的 3.3。');power=false;}
+  else if(w.VCC==='5V'){add('err','VCC 接到 5V','這塊螢幕只能吃 3.3V，接 5V 有機會燒壞。','拔掉，改接 3.3（就在 5V 下面兩格）。');power=false;burn=true;}
+  else if(w.VCC!=='3V3'){add('err','VCC 接在 '+w.VCC,w.VCC==='GND'?'電源正極接到地，螢幕不會亮。':'GPIO 的電流不夠當電源。','改接 3.3。');power=false;}
+  if(!w.GND){add('err','螢幕 GND 沒接','電流沒有回路，訊號也沒有基準電位。','把 GND 接到板子右排的 G。');power=false;}
+  else if(w.GND!=='GND'){add('err','GND 接在 '+w.GND,'接地只能接板子的 GND。','改接右排的 G。');power=false;}
   var sig=[['SCL','SCLK','時脈'],['SDA','MOSI','資料'],['RES','RST','重置'],['DC','DC','資料/命令'],['CS','CS','片選']],bad=[];
   sig.forEach(function(r){var cp=r[0],num=c[r[1]],got=w[cp];
-    if(!got){add('err',cp+' 沒接','程式從 GPIO '+num+' 送'+r[2]+'訊號，把 '+cp+' 接過去。');bad.push(cp);}
-    else if(got.indexOf('GPIO')!==0){add('err',cp+' 接到 '+got,'訊號線要接 GPIO，不是電源腳。');bad.push(cp);}
-    else if(got!=='GPIO'+num){add('err',cp+' 接在 '+got+'，程式寫的是 GPIO '+num,'線和程式要對上。改線，或把程式的腳位改掉。');bad.push(cp);}
-    else add('ok',cp+' → '+got);});
+    if(!got){add('err',cp+' 沒接','少了'+r[2]+'訊號，螢幕收不到完整的指令。','把 '+cp+' 接到 GPIO '+num+'。');bad.push(cp);}
+    else if(got.indexOf('GPIO')!==0){add('err',cp+' 接到 '+got,'訊號線要接 GPIO，不是電源腳。','改接 GPIO '+num+'。');bad.push(cp);}
+    else if(got!=='GPIO'+num){add('err',cp+' 接在 '+got,'程式是從 GPIO '+num+' 送'+r[2]+'訊號，線接到別的地方就收不到。','把線移到 GPIO '+num+'，或把程式裡的腳位改成 '+got.replace('GPIO','')+'。');bad.push(cp);}});
   var bl=false;
-  if(!w.BLK)add('err','BLK 沒接','背光不會亮，畫面是黑的。接到 GPIO '+c.BL+'。');
-  else if(w.BLK==='3V3'){bl=true;add('ok','BLK → 3V3','背光常亮。這樣 GPIO '+c.BL+' 就空出來了，但不能用程式調亮度。');}
-  else if(w.BLK==='GPIO'+c.BL){bl=true;add('ok','BLK → '+w.BLK);}
-  else if(w.BLK==='5V'){add('err','BLK 接到 5V','背光也只吃 3.3V。');}
-  else add('err','BLK 接在 '+w.BLK,w.BLK==='GND'?'接地等於關掉背光。':'程式把 GPIO '+c.BL+' 拉高來開背光，這根線沒接到那裡。');
-  // duplicates
-  var names={MOSI:'TFT_MOSI',SCLK:'TFT_SCLK',RST:'TFT_RST',DC:'TFT_DC',CS:'TFT_CS',BL:'TFT_BL',BTN:'BTN_PIN'},seen={},dupCode=false;
-  Object.keys(names).forEach(function(k){var n=c[k];if(seen[n]){add('err','程式裡 GPIO '+n+' 用了兩次',seen[n]+' 和 '+names[k]+' 不能共用同一根腳。');dupCode=true;}else seen[n]=names[k];});
+  if(!w.BLK)add('err','BLK 沒接','背光不會亮。畫面其實有在畫，只是看不到。','把 BLK 接到 GPIO '+c.BL+'。');
+  else if(w.BLK==='3V3'){bl=true;add('info','BLK 直接接 3.3','背光會常亮，GPIO '+c.BL+' 空出來了。但控制器的螢幕開關就關不掉背光。');}
+  else if(w.BLK==='GPIO'+c.BL){bl=true;}
+  else if(w.BLK==='5V')add('err','BLK 接到 5V','背光也只吃 3.3V。','改接 GPIO '+c.BL+'。');
+  else add('err','BLK 接在 '+w.BLK,w.BLK==='GND'?'接地等於把背光關掉。':'程式是把 GPIO '+c.BL+' 拉高來開背光。','改接 GPIO '+c.BL+'。');
+  var names={MOSI:'MOSI',SCLK:'SCK',RST:'TFT_RST',DC:'TFT_DC',CS:'TFT_CS',BL:'TFT_BLK'},seen={},dupCode=false;
+  Object.keys(names).forEach(function(k){var n=c[k];if(seen[n]){add('err','程式裡 GPIO '+n+' 用了兩次',seen[n]+' 和 '+names[k]+' 不能共用同一根腳。','在「程式裡的腳位」把其中一個改掉。');dupCode=true;}else seen[n]=names[k];});
   var used={},dupWire=false;
-  COMP_ORDER.forEach(function(cid){var b=w[cid];if(b&&b.indexOf('GPIO')===0){if(used[b]){add('err',b+' 上接了兩條訊號線',COMP[used[b]].name+' 和 '+COMP[cid].name+' 擠在同一根腳，訊號會打架。');dupWire=true;}else used[b]=cid;}});
-  // button
-  var bt=buttonLegs(),btnOk=false;
-  if(bt.count===0)add('warn','按鈕還沒接','螢幕會亮，但按了不會換表情。一腳接 GPIO '+c.BTN+'，另一腳接 GND。');
-  else if(bt.twoGpio)add('err','按鈕兩腳都接到 GPIO','一腳接 GPIO '+c.BTN+'，另一腳要接 GND。');
-  else if(bt.count===1)add('err','按鈕只接了一腳',bt.gnd?'另一腳接到 GPIO '+c.BTN+'。':'另一腳接到 GND，按下去才有電位變化。');
-  else if(bt.v33)add('err','按鈕另一腳接到電源','程式用 INPUT_PULLUP，腳位平常就是高電位。按鈕要把它拉到 GND 才讀得到「按下」。');
-  else if(!bt.gpio)add('err','按鈕沒有接到 GPIO','一腳接 GPIO '+c.BTN+'。');
-  else if(bt.gpio!=='GPIO'+c.BTN)add('err','按鈕接在 '+bt.gpio+'，程式讀的是 GPIO '+c.BTN,'改線，或把 BTN_PIN 改掉。');
-  else{btnOk=true;add('ok','按鈕 → '+bt.gpio+' 和 GND');}
-  // advisories
-  ['MOSI','SCLK','RST','DC','CS','BL'].forEach(function(k){if(c[k]===9)add('warn',names[k]+' 用了 GPIO 9','這根接著 BOOT 鈕，而且開機時不能是低電位。螢幕訊號換一根比較安全。');});
-  if(c.BTN===9&&btnOk)add('info','按鈕在 GPIO 9（開機腳位）','開機完成後按沒問題。通電時按著就會進燒錄模式。');
-  if(c.BTN===2&&btnOk)add('warn','按鈕在 GPIO 2（開機腳位）','通電時按著，板子可能開不了機。');
-  if(c.BTN===8&&btnOk)add('warn','按鈕在 GPIO 8','這根接著板上 LED，也是開機腳位，換一根比較好。');
-  if([c.SCLK,c.MOSI,c.DC,c.CS,c.BL].indexOf(2)>=0||c.RST===2)add('info','GPIO 2 是開機腳位','接螢幕 RES 沒問題，因為重置線平常是高電位。');
-  if([c.SCLK,c.MOSI,c.RST,c.DC,c.CS,c.BL].indexOf(8)>=0)add('info','GPIO 8 接著板上藍色 LED','螢幕更新時 LED 會跟著閃，是正常的。');
+  SCR_PINS.forEach(function(cid){var b=w[cid];if(b&&b.indexOf('GPIO')===0){if(used[b]){add('err',b+' 上接了兩條線',used[b]+' 和 '+cid+' 擠在同一根腳，訊號會互相干擾。','一根 GPIO 只接一條訊號線。');dupWire=true;}else used[b]=cid;}});
+  Object.keys(names).forEach(function(k){if(c[k]===9)add('warn',names[k]+' 用了 GPIO 9','這根接著 BOOT 鈕，開機瞬間不能是低電位。','螢幕訊號換一根比較安全。');});
   var lcd;
-  if(burn)lcd='burn';
-  else if(!power)lcd='off';
-  else if(!bl)lcd='dark';
+  if(burn)lcd='burn';else if(!power)lcd='off';else if(!bl)lcd='dark';
   else if(bad.length===0&&!dupCode&&!dupWire)lcd='run';
   else if(bad.length===1&&bad[0]==='DC')lcd='noise';
   else lcd='blank';
-  return {items:items,lcd:lcd,btnOk:btnOk,bt:bt};
+  return {items:items,lcd:lcd,blWired:w.BLK==='GPIO'+c.BL};
 }
-var LCDNAME={off:['沒通電','warn'],burn:['電壓錯誤','bad'],dark:['背光沒亮','bad'],blank:['有背光、沒畫面','bad'],noise:['畫面是雜訊','bad'],run:['正常運作','ok'],download:['燒錄模式','warn'],bootfail:['開機失敗','bad'],idle:['尚未通電','warn']};
+var LCDNAME={off:'螢幕沒電',burn:'電壓接錯',dark:'背光沒亮',blank:'有背光、沒畫面',noise:'畫面是雜訊',run:'正常運作',download:'燒錄模式',idle:'尚未通電'};
+
+/* ---------- simulated screen ---------- */
+function T(x,y,size,color,str){ // GFX-style text: 6×8 px per char at size 1, (x,y) = top-left
+  return '<text x="'+x+'" y="'+(y+size*7)+'" font-family="var(--f-mono)" font-weight="600" font-size="'+(size*9.6)+'" fill="'+color+'" textLength="'+(String(str).length*6*size)+'" lengthAdjust="spacingAndGlyphs">'+esc(str)+'</text>';
+}
+function R(x,y,w,h,color,rx){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+color+'"'+(rx?' rx="'+rx+'"':'')+'/>';}
+var INK='#0B1320';
+function eyeInk(){return state.bg===INK?'#FFFFFF':INK;}
+function faceMarkup(){
+  var e=state.eyes,ink=eyeInk(),s=R(0,0,240,240,state.bg);
+  var lx=60+e.ox,rx=180+e.ox,cy=92;
+  if(state.view==='squish'){
+    if(e.closed){s+=R(lx-17,cy-5,34,10,ink,5)+R(rx-17,cy-5,34,10,ink,5);}
+    else{s+='<polyline points="'+(lx-12)+','+(cy-28)+' '+(lx+14)+','+cy+' '+(lx-12)+','+(cy+28)+'" fill="none" stroke="'+ink+'" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>';
+         s+='<polyline points="'+(rx+12)+','+(cy-28)+' '+(rx-14)+','+cy+' '+(rx+12)+','+(cy+28)+'" fill="none" stroke="'+ink+'" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>';}
+  }else{
+    if(e.blink){s+=R(lx-17,cy-4,34,8,ink,4)+R(rx-17,cy-4,34,8,ink,4);}
+    else{s+='<ellipse cx="'+lx+'" cy="'+cy+'" rx="17" ry="29" fill="'+ink+'"/><ellipse cx="'+rx+'" cy="'+cy+'" rx="17" ry="29" fill="'+ink+'"/>';
+         s+='<circle cx="'+(lx+6)+'" cy="'+(cy-12)+'" r="5" fill="'+state.bg+'"/><circle cx="'+(rx+6)+'" cy="'+(cy-12)+'" r="5" fill="'+state.bg+'"/>';}
+  }
+  s+='<path d="M'+(104+e.ox)+' 150 Q'+(120+e.ox)+' 166 '+(136+e.ox)+' 150" fill="none" stroke="'+ink+'" stroke-width="6" stroke-linecap="round"/>';
+  return s;
+}
+function blobPoints(n){var pts=[];for(var i=0;i<=n;i++){var a=-Math.PI/2+i/162*Math.PI*2;var r=62+5*Math.sin(a*2+0.6);pts.push((120+r*Math.cos(a)*1.08).toFixed(1)+','+(108+r*Math.sin(a)*0.92).toFixed(1));}return pts.join(' ');}
+function lcdContent(){
+  var v=state.view,s='';
+  if(v==='splash'){s=R(0,0,240,240,state.bg)+T(66,98,3,'#fff','Clawd')+T(66,134,3,'#fff','Mochi');}
+  else if(v==='wifi'){s=R(0,0,240,240,'#0A0C10')+R(0,0,240,4,'#E9A23B')+T(12,16,2,'#fff','WiFi: ClaWD-Mochi')+T(12,44,1,'#8A8886','password: clawd1234')+T(12,68,2,'#fff','Open browser:')+T(12,94,2,'#E9A23B','192.168.4.1')+T(12,124,1,'#8A8886','press any button to start');}
+  else if(v==='normal'||v==='squish'){s=faceMarkup();}
+  else if(v==='logo'){s=R(0,0,240,240,state.bg);
+    if(state.logoN>=162){s+='<polygon points="'+blobPoints(162)+'" fill="#fff"/><ellipse cx="100" cy="102" rx="6" ry="9" fill="'+state.bg+'"/><ellipse cx="140" cy="102" rx="6" ry="9" fill="'+state.bg+'"/>'+T(90,200,2,'#fff','Mochi');}
+    else s+='<polyline points="'+blobPoints(state.logoN)+'" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';}
+  else if(v==='code'){var t=state.term;s=R(0,0,240,240,'#0A0C10')+T(8,4,1,'#E9A23B','clawd@mochi terminal')+R(0,18,240,1,'#E9A23B');
+    for(var r=0;r<8;r++){var yy=22+r*20;if(r===t.row)s+=T(8,yy+6,1,'#50DC82','clawd:~$ ');
+      if(t.lines[r])s+=T(62,yy+1,2,'#fff',t.lines[r]);
+      if(r===t.row)s+=R(62+t.col*12,yy+1,10,18,'#50DC82');}}
+  else if(v==='canvas'){s=R(0,0,240,240,state.bg);
+    state.strokes.forEach(function(k){if(k.pts.length===1)s+='<circle cx="'+k.pts[0][0]+'" cy="'+k.pts[0][1]+'" r="2.5" fill="'+k.color+'"/>';
+      else s+='<polyline points="'+k.pts.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="none" stroke="'+k.color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';});}
+  return s;
+}
 function drawLcd(){
-  var g=$('lcd');if(!g)return;var x=LCD.x,y=LCD.y,w=LCD.w,h=LCD.h,s='';
-  var st=state.powered?state.lcd:'idle';
-  if(st==='run'){
-    s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#000"/>';
-    if(state.face<0){s+='<text x="'+(x+w/2)+'" y="'+(y+h/2-4)+'" text-anchor="middle" font-family="var(--f-mono)" font-size="13" fill="#3DE0F0">Press button</text><text x="'+(x+w/2)+'" y="'+(y+h/2+14)+'" text-anchor="middle" font-family="var(--f-mono)" font-size="13" fill="#3DE0F0">to start</text>';}
-    else{var f=FACES[state.face],fs=f.length<=4?36:(f.length<=6?27:21);
-      s+='<text x="'+(x+w/2)+'" y="'+(y+h/2+fs*0.34)+'" text-anchor="middle" font-family="var(--f-mono)" font-weight="600" font-size="'+fs+'" fill="#fff">'+esc(f)+'</text>';}
-  }else if(st==='blank'){s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#C9D3DE"/>';}
-  else if(st==='noise'){s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#222"/>';
-    var cols=['#F25','#3CF','#FD3','#6F6','#fff','#93F','#111'];
-    for(var i=0;i<140;i++){var rx=x+Math.floor(Math.random()*17)*8,ry=y+Math.floor(Math.random()*34)*4;s+='<rect x="'+rx+'" y="'+ry+'" width="'+(8+Math.floor(Math.random()*3)*8)+'" height="4" fill="'+cols[i%cols.length]+'"/>';}
-    s='<g clip-path="url(#lcdClip)">'+s+'</g>';}
-  else if(st==='dark'){s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#10151B"/>';}
-  else{s+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#05080B"/>';}
-  g.innerHTML=s;
+  var g=$('lcd');if(!g)return;var st=state.powered?state.lcd:'idle',inner='';
+  if(st==='run'){inner=lcdContent();if(!state.bl&&evaluate().blWired)inner=R(0,0,240,240,'#10151B');}
+  else if(st==='blank')inner=R(0,0,240,240,'#C9D3DE');
+  else if(st==='noise'){inner=R(0,0,240,240,'#222');var cols=['#F25','#3CF','#FD3','#6F6','#fff','#93F','#111'];
+    for(var i=0;i<140;i++)inner+=R(Math.floor(Math.random()*16)*15,Math.floor(Math.random()*34)*7,15+Math.floor(Math.random()*3)*15,7,cols[i%cols.length]);}
+  else if(st==='dark')inner=R(0,0,240,240,'#10151B');
+  else inner=R(0,0,240,240,'#05080B');
+  g.innerHTML='<g transform="translate('+LCD.x+','+LCD.y+') scale('+(LCD.w/240)+')" clip-path="url(#lcdClip)">'+inner+'</g>';
+  var mini=$('ctlScreen');if(mini)mini.innerHTML=inner;
   var led=$('wLed');if(led)led.classList.toggle('on',state.powered&&state.lcd==='run'&&state.code.SCLK===8);
 }
-function log(line){state.serial.push(line);if(state.serial.length>60)state.serial.shift();var el=$('serial');el.textContent=state.serial.join('\n');el.scrollTop=el.scrollHeight;}
-function renderDiag(ev){
-  var mark={ok:'✓',err:'×',warn:'!',info:'i'};
-  $('diag').innerHTML=ev.items.map(function(it){return '<li class="'+it.lv+'"><span class="ic" aria-hidden="true">'+mark[it.lv]+'</span><div><b>'+esc(it.t)+'</b>'+(it.d?'<small>'+esc(it.d)+'</small>':'')+'</div></li>';}).join('');
-  var key=state.powered?state.lcd:'idle',n=LCDNAME[key];
-  $('lcdPill').innerHTML='<span class="pill '+n[1]+'">螢幕：'+n[0]+'</span>';
+/* animation runner: steps = [[fn, ms], ...] */
+var animTok=0;
+function stopAnim(){animTok++;}
+function runAnim(steps,done){
+  var tok=++animTok,i=0;
+  (function next(){
+    if(tok!==animTok)return;
+    if(i>=steps.length){if(done)done();return;}
+    var st=steps[i++];st[0]();drawLcd();setTimeout(next,REDUCED?Math.min(st[1],40):st[1]);
+  })();
 }
-function renderMission(ev){
-  var ex=expected(),w=state.wires,next=null,done=0;
-  var bt=ev.bt,btnDone=ev.btnOk;
-  COMP_ORDER.forEach(function(cid){
-    var ok;
-    if(cid==='B1'||cid==='B2')ok=btnDone;
-    else if(cid==='BLK')ok=(w.BLK===ex.BLK||w.BLK==='3V3');
-    else ok=w[cid]===ex[cid];
-    if(ok)done++;else if(!next)next=cid;});
-  var tgt=null;
-  if(next){tgt=ex[next];
-    if(next==='B1'||next==='B2'){ // pick the leg/target that is still missing
-      var legs=[w.B1,w.B2];
-      if(!bt.gpio||bt.gpio!==ex.B1){next=(w.B1&&w.B1==='GND')?'B2':'B1';tgt=ex.B1;}
-      else{next=(w.B1===ex.B1)?'B2':'B1';tgt='GND';}
-    }}
-  var m=$('mission');
-  if(!next){
-    m.innerHTML=state.powered&&(state.lcd==='download'||state.lcd==='bootfail')?'<b>線都對，但板子沒開機成功。</b><span>通電那一瞬間按鈕把開機腳位拉低了。取消「通電時按住按鈕」，再通電一次。</span>':state.powered&&state.lcd==='run'?'<b>接好了，也通電了。</b><span>點紅色鍵帽（或按鍵盤空白鍵）換表情。試試把一條線拔掉，看螢幕怎麼反應。</span>':'<b>10 條線都對了。</b><span>按「通電」看 Mochi 醒來。</span>';
+function sp(ms){return state.speed===3?ms/2:(state.speed===1?ms*2:ms);}
+function log(line){state.serial.push(line);if(state.serial.length>80)state.serial.shift();var el=$('serial');el.textContent=state.serial.join('\n');el.scrollTop=el.scrollHeight;}
+
+function animNormal(){state.view='normal';var st=[];[-16,16,-16,16,0].forEach(function(o){st.push([function(){state.eyes={ox:o,blink:false,closed:false};},sp(80)]);});
+  st.push([function(){state.eyes.blink=true;},sp(100)],[function(){state.eyes.blink=false;},sp(70)],[function(){state.eyes.blink=true;},sp(70)],[function(){state.eyes.blink=false;},0]);runAnim(st);}
+function animSquish(){state.view='squish';state.eyes={ox:0,blink:false,closed:false};var st=[];for(var i=0;i<3;i++){st.push([function(){state.eyes.closed=false;},sp(160)],[function(){state.eyes.closed=true;},sp(100)]);}
+  st.push([function(){state.eyes.closed=false;},0]);runAnim(st);}
+function animLogo(done){state.view='logo';state.logoN=0;var st=[];for(var n=4;n<=160;n+=4)(function(n){st.push([function(){state.logoN=n;},sp(8)]);})(n);
+  st.push([function(){state.logoN=162;},1500]);runAnim(st,done);}
+function termChar(ch){var t=state.term;
+  function scroll(){t.lines.shift();t.lines.push('');t.row=7;}
+  if(ch==='\n'){t.row++;t.col=0;if(t.row>=8)scroll();}
+  else{if(t.col>=15){t.row++;t.col=0;if(t.row>=8)scroll();}t.lines[t.row]+=ch;t.col++;}
+}
+function setView(k){
+  if(!state.ready)return;
+  var f=FX[FXI[k]];
+  if(!state.feat[k]){toast('「'+f.name+'」沒有編進韌體。在空間預算把它勾回來。');return;}
+  stopAnim();log('GET '+f.cmd);
+  if(k==='normal')animNormal();
+  else if(k==='squish')animSquish();
+  else if(k==='logo')animLogo();
+  else if(k==='code'){state.view='code';state.term={lines:['','','','','','','',''],row:0,col:0};drawLcd();}
+  else if(k==='canvas'){state.view='canvas';state.strokes=[];drawLcd();renderPad();}
+  renderCtl();
+}
+function renderPad(){
+  var s='<svg viewBox="0 0 240 240" id="padSvg" role="img" aria-label="畫布">'+R(0,0,240,240,state.bg);
+  state.strokes.forEach(function(k){if(k.pts.length===1)s+='<circle cx="'+k.pts[0][0]+'" cy="'+k.pts[0][1]+'" r="2.5" fill="'+k.color+'"/>';
+    else s+='<polyline points="'+k.pts.map(function(p){return p[0]+','+p[1];}).join(' ')+'" fill="none" stroke="'+k.color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';});
+  $('padBox').innerHTML=s+'</svg>';
+}
+function renderCtl(){
+  var run=state.powered&&state.lcd==='run';
+  $('ctlPill').innerHTML=run&&state.ready?'<span class="pill ok">已連上 192.168.4.1</span>':(run?'<span class="pill warn">開機中</span>':'<span class="pill warn">Mochi 還沒開機</span>');
+  $('ctlNote').textContent=run?'實機是用手機連上 Mochi 的 WiFi 熱點「ClaWD-Mochi」，打開 192.168.4.1 看到這組按鈕。按一下，上面的螢幕就會跟著變。':'把 8 條線接對再通電，這裡的按鈕才會亮起來。Mochi 沒有實體按鍵，5 個功能都靠手機網頁控制。';
+  $('ctlBtns').innerHTML=FX.map(function(f){var dis=!(run&&state.ready)||!state.feat[f.k];
+    return '<button type="button" class="vbtn" data-view="'+f.k+'" aria-pressed="'+(state.view===f.k)+'"'+(dis?' disabled':'')+'><b>'+f.name+'</b><span>'+(state.feat[f.k]?f.en:'未編入')+'</span></button>';}).join('');
+  $('blBtn').disabled=!(run&&state.ready);$('blBtn').textContent='螢幕：'+(state.bl?'開':'關');
+  $('speedSel').value=String(state.speed);
+  $('bgSw').innerHTML=BGS.map(function(c){return '<button type="button" class="swatch" data-bg="'+c+'" aria-pressed="'+(state.bg===c)+'" aria-label="背景 '+c+'" style="background:'+c+'"></button>';}).join('');
+  $('penSw').innerHTML=PENS.map(function(c){return '<button type="button" class="swatch" data-pen="'+c+'" aria-pressed="'+(state.pen===c)+'" aria-label="筆 '+c+'" style="background:'+c+'"></button>';}).join('');
+  $('termPanel').hidden=!(run&&state.view==='code');
+  $('drawPanel').hidden=!(run&&state.view==='canvas');
+}
+
+/* ---------- popup ---------- */
+var lastFocus=null;
+function openModal(html){lastFocus=document.activeElement;$('modal').innerHTML=html;$('scrim').hidden=false;var b=$('modal').querySelector('[data-close]');if(b){try{b.focus({preventScroll:true});}catch(e){b.focus();}}$('modal').scrollTop=0;}
+function closeModal(){$('scrim').hidden=true;if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+function showReport(ev,mode){
+  var mark={err:'×',warn:'!',info:'i',ok:'✓'},h='';
+  var errs=ev.items.filter(function(i){return i.lv==='err';}),others=ev.items.filter(function(i){return i.lv!=='err';});
+  function li(it){return '<li class="'+it.lv+'"><span class="ic" aria-hidden="true">'+mark[it.lv]+'</span><div><b>'+esc(it.t)+'</b>'+(it.d?'<small>'+esc(it.d)+'</small>':'')+(it.h?'<span class="hintline">怎麼修：'+esc(it.h)+'</span>':'')+'</div></li>';}
+  if(mode==='download'){
+    h='<h2 id="modalTitle"><span class="badge warn">!</span>板子進了燒錄模式</h2><p>線都接對了，但通電那一瞬間 BOOT 鈕被按著，GPIO 9 是低電位。晶片看到這個狀態就會等著被燒錄，不會執行 Mochi 的程式，所以螢幕是黑的。</p><ul class="plist"><li class="info"><span class="ic">i</span><div><b>這不是壞掉</b><small>要燒新韌體時，本來就是用這個方法進燒錄模式。</small><span class="hintline">怎麼修：取消「通電時按住 BOOT 鈕」，再通電一次。</span></div></li></ul>';
+  }else if(errs.length===0){
+    h='<h2 id="modalTitle"><span class="badge ok">✓</span>8 條線都接對，Mochi 開機了</h2><p>螢幕會先顯示開機畫面'+(state.feat.logo?'和 logo 動畫':'')+'，接著出現 WiFi 資訊。等它停在 WiFi 畫面後，用下面的「Mochi 控制器」切換 5 個功能。</p>';
+    var notes=others.slice();
+    notes.push({lv:'info',t:'板上藍色 LED 會跟著閃',d:'GPIO 8 同時接著板上 LED 和螢幕時脈，畫面更新時它會微微閃，是正常的。',h:''});
+    notes.push({lv:'info',t:'GPIO 2 是開機腳位',d:'接螢幕 RES 沒問題，因為重置線平常是高電位。',h:''});
+    h+='<ul class="plist">'+notes.map(li).join('')+'</ul>';
   }else{
-    m.innerHTML='<b>'+done+' / 10</b><span>下一步：把 <b>'+COMP[next].desc+'</b> 接到 <b>'+tgt+'</b>。'+(state.sel?'　已選取 '+(state.sel.type==='comp'?COMP[state.sel.id].desc:state.sel.id)+'，再點另一端。':'')+'</span>';
+    var sym={off:'螢幕完全不亮',burn:'電壓接錯，已切斷電源保護螢幕',dark:'螢幕是黑的（背光沒亮）',blank:'背光有亮，但整片空白',noise:'畫面是一片雜訊'}[ev.lcd];
+    h='<h2 id="modalTitle"><span class="badge err">×</span>還有 '+errs.length+' 個地方要修</h2><p>現在的症狀：<b>'+sym+'</b>。照下面一項一項改，改完再按「通電」。</p>';
+    h+='<ul class="plist">'+errs.map(li).join('')+others.map(li).join('')+'</ul>';
   }
-  // hints + selection classes
+  h+='<div class="row" style="justify-content:flex-end"><button class="btn primary" type="button" data-close>'+(errs.length&&mode!=='download'?'回去修線':'好')+'</button></div>';
+  openModal(h);
+}
+
+function renderMission(){
+  var ex=expected(),w=state.wires,next=null,done=0;
+  SCR_PINS.forEach(function(cid){var ok=cid==='BLK'?(w.BLK===ex.BLK||w.BLK==='3V3'):w[cid]===ex[cid];if(ok)done++;else if(!next)next=cid;});
+  var tgt=next?ex[next]:null,m=$('mission');
+  if(!next){
+    m.innerHTML=state.powered&&state.lcd==='download'?'<b>線都對，但板子在燒錄模式。</b><span>取消「通電時按住 BOOT 鈕」，再通電一次。</span>':state.powered&&state.lcd==='run'?'<b>Mochi 開機了。</b><span>用下面的控制器切換 5 個功能。也可以拔掉一條線再通電，看螢幕怎麼反應。</span>':'<b>8 條線都對了。</b><span>按「通電」看 Mochi 醒來。</span>';
+  }else{
+    m.innerHTML='<b>'+done+' / 8</b><span>下一步：把 <b>'+COMP[next].desc+'</b> 接到 <b>'+tgt+'</b>。'+(state.sel?'　已選取 '+(state.sel.type==='comp'?COMP[state.sel.id].desc:state.sel.id)+'，再點另一端。':'')+'</span>';
+  }
   var svg=$('benchSvg');
   var cp=svg.querySelectorAll('.cpin');for(var i=0;i<cp.length;i++){var id=cp[i].getAttribute('data-comp');
     cp[i].classList.toggle('hint',state.hint&&!state.sel&&id===next);
@@ -730,68 +745,90 @@ function renderMission(ev){
     bp[j].classList.toggle('sel',!!state.sel&&state.sel.type==='board'&&state.sel.id===bid);}
 }
 function renderConn(){
-  var opts=['<option value="">（沒接）</option>'].concat(['3V3','5V','GND'].concat(GPIO_NUMS.map(function(n){return 'GPIO'+n;})).map(function(id){return '<option value="'+id+'">'+id+'</option>';})).join('');
   if(!$('connTable').children.length){
-    $('connTable').innerHTML=COMP_ORDER.map(function(cid){return '<label for="c_'+cid+'"><i style="background:'+COMP[cid].color+'"></i>'+COMP[cid].desc+'</label><select id="c_'+cid+'" data-conn="'+cid+'">'+opts+'</select>';}).join('');
+    var opts=['<option value="">（沒接）</option>'].concat(['3V3','5V','GND'].concat(GPIO_NUMS.map(function(n){return 'GPIO'+n;})).map(function(id){return '<option value="'+id+'">'+id+'</option>';})).join('');
+    $('connTable').innerHTML=SCR_PINS.map(function(cid){return '<label for="c_'+cid+'"><i style="background:'+COMP[cid].color+'"></i>'+COMP[cid].desc+'</label><select id="c_'+cid+'" data-conn="'+cid+'">'+opts+'</select>';}).join('');
   }
-  COMP_ORDER.forEach(function(cid){$('c_'+cid).value=state.wires[cid]||'';});
-}
-function renderBudget(){
-  var used={};COMP_ORDER.forEach(function(cid){var b=state.wires[cid];if(b&&b.indexOf('GPIO')===0)used[b]=true;});
-  var n=Object.keys(used).length,free=GPIO_NUMS.filter(function(x){return !used['GPIO'+x];});
-  $('budget').innerHTML=GPIO_NUMS.map(function(x){return '<span class="'+(used['GPIO'+x]?'used':'')+'">'+x+'</span>';}).join('');
-  var adcFree=free.filter(function(x){return x<=4;});
-  $('budgetText').textContent='13 根 GPIO 用了 '+n+' 根，剩 '+free.length+' 根。'+(n>=7?'其中還能讀類比的只剩 '+(adcFree.length?'GPIO '+adcFree.join('、'):'0 根')+'。想再加感測器，要先算腳位夠不夠。':'');
+  SCR_PINS.forEach(function(cid){$('c_'+cid).value=state.wires[cid]||'';});
 }
 function renderCode(){
-  var c=state.code,rows=[['MOSI','TFT_MOSI','螢幕 SDA'],['SCLK','TFT_SCLK','螢幕 SCL'],['RST','TFT_RST','螢幕 RES'],['DC','TFT_DC','螢幕 DC'],['CS','TFT_CS','螢幕 CS'],['BL','TFT_BL','螢幕 BLK'],['BTN','BTN_PIN','按鈕']];
+  var c=state.code,rows=[['MOSI','SPI MOSI','螢幕 SDA'],['SCLK','SPI SCK','螢幕 SCL'],['RST','TFT_RST','螢幕 RES'],['DC','TFT_DC','螢幕 DC'],['CS','TFT_CS','螢幕 CS'],['BL','TFT_BLK','螢幕 BLK']];
   if(!$('codePins').children.length){
     var o=GPIO_NUMS.map(function(n){return '<option value="'+n+'">GPIO '+n+'</option>';}).join('');
     $('codePins').innerHTML=rows.map(function(r){return '<label class="field"><span class="mono" style="font-size:12.5px">'+r[1]+'</span><select id="k_'+r[0]+'" data-code="'+r[0]+'">'+o+'</select></label>';}).join('');
   }
   rows.forEach(function(r){$('k_'+r[0]).value=String(c[r[0]]);});
-  var t=rows.map(function(r){var a='#define '+r[1];while(a.length<17)a+=' ';var num=String(c[r[0]]);var b=num;while(b.length<4)b+=' ';return esc(a)+'<b>'+num+'</b>'+b.slice(num.length)+'<span class="d">// '+r[2]+'</span>';}).join('\n');
-  t+='\n\n<span class="d">// setup() 裡跟腳位有關的幾行</span>\npinMode(BTN_PIN, INPUT_PULLUP);   <span class="d">// 按下 = LOW</span>\npinMode(TFT_BL, OUTPUT);\ndigitalWrite(TFT_BL, HIGH);       <span class="d">// 開背光</span>\nSPI.begin(TFT_SCLK, -1, TFT_MOSI, TFT_CS);\ntft.init(240, 240);';
+  function def(n,v,cm){var a='#define '+n;while(a.length<17)a+=' ';var num=String(v),padr='';for(var i=num.length;i<4;i++)padr+=' ';return esc(a)+'<b>'+num+'</b>'+padr+'<span class="d">// '+cm+'</span>';}
+  var t=def('TFT_CS',c.CS,'螢幕 CS')+'\n'+def('TFT_DC',c.DC,'螢幕 DC')+'\n'+def('TFT_RST',c.RST,'螢幕 RES')+'\n'+def('TFT_BLK',c.BL,'螢幕 BLK');
+  t+='\n\nAdafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);\n\n<span class="d">// setup() 裡跟腳位有關的幾行</span>\npinMode(TFT_BLK, OUTPUT);\nsetBacklight(true);                <span class="d">// 背光拉高</span>\nSPI.begin(<b>'+c.SCLK+'</b>, -1, <b>'+c.MOSI+'</b>, TFT_CS);   <span class="d">// SCK, MISO 不接, MOSI</span>\ntft.init(240, 240);\ntft.setSPISpeed(40000000);         <span class="d">// 40 MHz</span>\ntft.setRotation(1);';
   $('codeView').innerHTML=t;
 }
-function plainCode(){return $('codeView').textContent;}
+
+/* ---------- space budget ---------- */
+function mask(feat){var m=0;FX.forEach(function(f,i){if(feat[f.k])m|=(1<<i);});return m;}
+function meas(m){return MEAS[m];}
+function renderBudget(){
+  var m=0,segs=[['螢幕基礎（核心 + GFX + ST7789）',BASE.flash,'--s1'],['WiFi 熱點 + 網頁伺服器 + 控制頁',meas(0)[0]-BASE.flash,'--s2']],per={};
+  FX.forEach(function(f,i){if(state.feat[f.k]){var before=meas(m)[0];m|=(1<<i);per[f.k]=meas(m)[0]-before;segs.push([f.name,per[f.k],f.color]);}});
+  var img=state.imgs*115200;if(img)segs.push(['額外圖片',img,'--s8']);
+  var total=meas(m)[0]+img,limit=PART[state.part].app,over=total>limit,pct=total/limit*100;
+  var fxSum=FX.reduce(function(t,f){return t+(per[f.k]||0);},0),maxPer=Math.max.apply(null,FX.map(function(f){return meas(1<<FXI[f.k])[0]-meas(0)[0];}));
+  $('fxRows').innerHTML=FX.map(function(f,i){var on=state.feat[f.k],b=on?per[f.k]:0;
+    return '<div class="fxrow"><label><input type="checkbox" id="fx_'+f.k+'" data-feat="'+f.k+'"'+(on?' checked':'')+'><span>'+f.name+'</span></label><div class="mini" aria-hidden="true"><span style="width:'+(on?Math.max(4,b/maxPer*100):0)+'%;background:var('+f.color+')"></span></div><span class="num">'+(on?fmt(b)+' B　'+(b/limit*100).toFixed(2)+'%':'未編入')+'</span></div>';}).join('');
+  $('fPct').textContent=Math.floor(pct)+'%';
+  $('fPill').innerHTML=over?'<span class="pill bad">超出 '+fmt((total-limit)/1024)+' KB，燒不進去</span>':(pct>90?'<span class="pill warn">快滿了</span>':'<span class="pill ok">裝得下</span>');
+  var scale=Math.max(total,limit);
+  $('fBar').innerHTML=segs.map(function(s){return '<span title="'+s[0]+'：'+fmt(s[1])+' 位元組" style="width:'+(s[1]/scale*100)+'%;background:var('+s[2]+')"></span>';}).join('');
+  var pos=limit/scale*100,l=$('fLimit');l.style.left=pos+'%';l.classList.toggle('flip',pos>55);l.querySelector('em').textContent='上限 '+fmt(limit);
+  $('fLegend').innerHTML=segs.slice(0,2).concat(img?[segs[segs.length-1]]:[]).map(function(s){return '<span><i style="background:var('+s[2]+')"></i>'+s[0]+' '+fmt(s[1])+'（'+(s[1]/limit*100).toFixed(1)+'%）</span>';}).join('')+'<span><i style="background:var(--s5)"></i>勾選的功能合計 '+fmt(fxSum)+'（'+(fxSum/limit*100).toFixed(2)+'%）</span>';
+  $('fText').textContent='用了 '+fmt(total)+' / '+fmt(limit)+' 位元組'+(over?'。編譯器會回報 Sketch too big。':'，還剩 '+fmt((limit-total)/1024)+' KB 可以加你自己的功能。');
+  $('imgV').textContent=state.imgs+' 張';$('imgN').value=state.imgs;$('mPart').value=state.part;
+  var ram=meas(m)[1],rp=ram/RAM_TOTAL*100;
+  $('rPct').textContent=Math.floor(rp)+'%';$('rPill').innerHTML='<span class="pill ok">夠用</span>';
+  $('rBar').innerHTML='<span style="width:'+(BASE.ram/RAM_TOTAL*100)+'%;background:var(--s1)"></span><span style="width:'+((ram-BASE.ram)/RAM_TOTAL*100)+'%;background:var(--s2)"></span>';
+  var rl=$('rLimit');rl.style.left='100%';rl.classList.add('flip');rl.querySelector('em').textContent='上限 '+fmt(RAM_TOTAL);
+  $('rText').textContent='全域變數用了 '+fmt(ram)+' / '+fmt(RAM_TOTAL)+' 位元組，其中螢幕基礎 '+fmt(BASE.ram)+'、WiFi 和網頁伺服器 '+fmt(ram-BASE.ram)+'。5 個功能幾乎不佔 RAM，因為它們直接畫到螢幕，沒有先存在記憶體裡。WiFi 執行時還會從剩下的空間臨時借用。';
+  var a=[],n=FX.filter(function(f){return state.feat[f.k];}).length;
+  if(over){var fit=['default','min_spiffs','no_ota','huge_app'].filter(function(k){return PART[k].app>=total;})[0];
+    a.push(fit?'換成「'+PART[fit].name+'」就裝得下'+(PART[fit].ota?'。':'，但會失去 OTA 無線更新。'):'連 3MB 的 Huge APP 都裝不下，要減少圖片。');}
+  if(n>0)a.push('勾選的 '+n+' 個功能加起來只有 '+fmt(fxSum)+' 位元組，佔不到 '+Math.max(1,Math.ceil(fxSum/limit*100))+'%。真正吃空間的是 WiFi 和網頁伺服器，佔了 '+Math.round((meas(0)[0]-BASE.flash)/limit*100)+'%。');
+  else a.push('5 個功能全部拿掉，也只省下 '+fmt(meas(31)[0]-meas(0)[0])+' 位元組。大頭是 WiFi 和網頁伺服器。');
+  a.push('功能這麼省，是因為眼睛用 fillRect 這類指令直接畫，logo 存的是 162 段線條的座標，整份韌體沒有任何一張圖片。');
+  if(state.imgs>0)a.push('一張全螢幕全彩圖是 115,200 位元組，約等於 5 個功能總和的 '+Math.round(115200/(meas(31)[0]-meas(0)[0]))+' 倍。'+state.imgs+' 張就是 '+fmt(img/1024)+' KB。');
+  else a.push('拉一下「再存幾張圖片」看看：一張 240 × 240 全彩圖就要 115,200 位元組。');
+  if(HTML_BYTES)a.push('手機上看到的控制頁，本身是一段 '+fmt(HTML_BYTES)+' 位元組的 HTML 文字，也存在 Flash 裡。');
+  $('advice').innerHTML=a.map(function(x){return '<li>'+x+'</li>';}).join('');
+}
+
+/* ---------- wiring flow ---------- */
 function refreshWiring(){
   var ev=evaluate();
-  if(state.powered){state.lcd=state.boot||ev.lcd;state.btnOk=ev.btnOk;}
-  renderWires();renderConn();renderBudget();renderDiag(ev);renderMission(ev);drawLcd();
+  if(state.powered)state.lcd=state.boot||ev.lcd;
+  renderWires();renderConn();renderMission();drawLcd();renderCtl();
   var pb=$('powerBtn');pb.textContent=state.powered?'斷電':'通電';pb.classList.toggle('on',state.powered);pb.classList.toggle('primary',!state.powered);
-  return ev;
 }
+function powerOff(msg){if(!state.powered)return;stopAnim();state.powered=false;state.ready=false;state.view='none';state.boot=null;if(msg)log(msg);}
 function setWire(cid,bid){
   if(bid)state.wires[cid]=bid;else delete state.wires[cid];
   store.set('wires',state.wires);
-  if(state.powered){state.powered=false;log('-- 改線前先斷電：已自動斷電 --');toast('已自動斷電。改完線再按「通電」。');}
+  if(state.powered){powerOff('-- 改線前先斷電：已自動斷電 --');toast('已自動斷電。改完線再按「通電」。');}
   refreshWiring();
 }
 function powerOn(){
-  var ev=evaluate();state.serial=[];state.face=-1;state.faceCount=0;state.powered=true;state.boot=null;state.lcd=ev.lcd;state.btnOk=ev.btnOk;
-  var bt=ev.bt,heldPin=(state.hold&&bt.gnd&&bt.gpio)?bt.gpio:null;
-  if(ev.lcd==='off'||ev.lcd==='burn'){log('ESP-ROM:esp32c3');log('板子有開機，但螢幕'+(ev.lcd==='burn'?'的電壓接錯了。':'沒有電。'));}
-  else if(heldPin==='GPIO9'){state.boot=state.lcd='download';log('ESP-ROM:esp32c3');log('boot: DOWNLOAD(USB/UART0)');log('waiting for download');log('-- GPIO 9 在開機瞬間是低電位，晶片進了燒錄模式，你的程式沒有跑 --');}
-  else if(heldPin==='GPIO2'){state.boot=state.lcd='bootfail';log('ESP-ROM:esp32c3');log('-- GPIO 2 在開機瞬間被拉低，開機模式無效，板子卡住 --');}
-  else{log('ESP-ROM:esp32c3');log('boot: SPI_FAST_FLASH_BOOT');
-    if(ev.lcd==='run'){log('Mochi ready. Press button.');if(ev.btnOk)setFlag('wired');}
-    else log('程式在跑，但螢幕狀態：'+LCDNAME[ev.lcd][0]+'。看右邊的診斷。');}
-  refreshWiring();
-  var el=$('serial');el.textContent=state.serial.join('\n');
-}
-function pressButton(){
-  if(!state.powered){toast('還沒通電。');return;}
-  if(state.lcd==='download'||state.lcd==='bootfail'){toast('板子沒有在跑你的程式。取消「通電時按住按鈕」再通電一次。');return;}
-  if(!state.btnOk){log('（按了按鈕，但程式沒讀到：看診斷裡的按鈕那一項）');return;}
-  state.face=(state.face+1)%FACES.length;state.faceCount++;
-  log('Face -> '+FACES[state.face]);
-  if(state.lcd==='run'&&state.faceCount>=3)setFlag('faces3');
-  drawLcd();
+  var ev=evaluate();stopAnim();state.serial=[];state.powered=true;state.boot=null;state.ready=false;state.bl=true;state.lcd=ev.lcd;state.view='none';
+  var allOk=ev.lcd==='run';
+  log('ESP-ROM:esp32c3');
+  if(allOk&&state.hold){state.boot=state.lcd='download';log('boot: DOWNLOAD(USB/UART0)');log('waiting for download');refreshWiring();showReport(ev,'download');return;}
+  log('boot: SPI_FAST_FLASH_BOOT');
+  if(allOk){
+    state.view='splash';
+    var afterBoot=function(){state.view='wifi';state.ready=true;log('WiFi AP: ClaWD-Mochi  ->  http://192.168.4.1');drawLcd();renderCtl();};
+    runAnim([[function(){},REDUCED?40:1200]],function(){if(state.feat.logo)animLogo(afterBoot);else afterBoot();});
+  }else log('程式在跑，但螢幕狀態：'+LCDNAME[ev.lcd]+'。');
+  refreshWiring();showReport(ev,'normal');
 }
 function onBenchClick(e){
   var t=e.target;
-  if(t.id==='btnCap'){pressButton();return;}
   var wg=t.closest('[data-wire]');if(wg){setWire(wg.getAttribute('data-wire'),null);return;}
   var cp=t.closest('[data-comp]'),bp=t.closest('[data-bpin]');
   if(cp){var cid=cp.getAttribute('data-comp');
@@ -803,201 +840,71 @@ function onBenchClick(e){
   if(state.sel){state.sel=null;refreshWiring();}
 }
 
-/* ================= MEMORY ================= */
-var PART={
-  'default':{name:'Default 4MB（1.2MB APP × 2，可 OTA）',app:1310720,ota:true,map:[['nvs',28,'--c-gnd'],['app0',1280,'--s1'],['app1（OTA 備份）',1280,'--s6'],['spiffs',1408,'--s2'],['dump',64,'--c-gnd']]},
-  'min_spiffs':{name:'Minimal SPIFFS（1.9MB APP × 2，可 OTA）',app:1966080,ota:true,map:[['nvs',28,'--c-gnd'],['app0',1920,'--s1'],['app1（OTA 備份）',1920,'--s6'],['spiffs',128,'--s2'],['dump',64,'--c-gnd']]},
-  'no_ota':{name:'No OTA（2MB APP / 2MB SPIFFS）',app:2097152,ota:false,map:[['nvs',28,'--c-gnd'],['app0',2048,'--s1'],['spiffs',1920,'--s2'],['dump',64,'--c-gnd']]},
-  'huge_app':{name:'Huge APP（3MB APP，不可 OTA）',app:3145728,ota:false,map:[['nvs',28,'--c-gnd'],['app0',3072,'--s1'],['spiffs',896,'--s2'],['dump',64,'--c-gnd']]}
-};
-var RAM_TOTAL=327680,BASE_FLASH=341634,BASE_RAM=15212;
-var EST={wifiF:480000,webF:65000,bleF:540000,wifiR:55000,webR:8000,bleR:70000};
-var PRESETS=[
- ['顏文字遊戲（實測）',{part:'default',wifi:false,web:false,ble:false,fmt:0,size:240,frames:0,canvas:false,chars:0,px:16}],
- ['Mochi 網頁遙控版',{part:'default',wifi:true,web:true,ble:false,fmt:0,size:240,frames:0,canvas:false,chars:0,px:16}],
- ['8 張全彩動畫',{part:'default',wifi:false,web:false,ble:false,fmt:16,size:240,frames:8,canvas:true,chars:0,px:16}],
- ['中文字型 3000 字',{part:'default',wifi:false,web:false,ble:false,fmt:0,size:240,frames:0,canvas:false,chars:3000,px:24}],
- ['WiFi + BLE 全開',{part:'default',wifi:true,web:true,ble:true,fmt:0,size:240,frames:0,canvas:false,chars:0,px:16}]
-];
-function memCalc(m){
-  var img=m.fmt?m.frames*Math.ceil(m.size*m.size*m.fmt/8):0;
-  var glyph=Math.ceil(m.px/8)*m.px+8,font=m.chars*glyph;
-  var web=m.web&&m.wifi;
-  var flash=[['核心 + GFX + 螢幕驅動',BASE_FLASH,'--s1'],['WiFi',m.wifi?EST.wifiF:0,'--s2'],['網頁伺服器',web?EST.webF:0,'--s6'],['BLE',m.ble?EST.bleF:0,'--s3'],['圖片',img,'--s4'],['中文字型',font,'--s5']];
-  var ram=[['靜態全域變數',BASE_RAM,'--s1'],['WiFi 執行時',m.wifi?EST.wifiR:0,'--s2'],['網頁伺服器',web?EST.webR:0,'--s6'],['BLE 執行時',m.ble?EST.bleR:0,'--s3'],['全螢幕畫布',m.canvas?115200:0,'--s4']];
-  function sum(a){return a.reduce(function(t,x){return t+x[1];},0);}
-  return {flash:flash,ram:ram,fTotal:sum(flash),rTotal:sum(ram),img:img,font:font,glyph:glyph,limit:PART[m.part].app};
-}
-function drawBar(barId,limId,segs,total,limit,limLabel){
-  var scale=Math.max(total,limit)*1.0;
-  $(barId).innerHTML=segs.filter(function(s){return s[1]>0;}).map(function(s){return '<span title="'+s[0]+'：'+fmt(s[1])+' 位元組" style="width:'+(s[1]/scale*100)+'%;background:var('+s[2]+')"></span>';}).join('');
-  var pos=limit/scale*100,l=$(limId);l.style.left=pos+'%';l.classList.toggle('flip',pos>55);l.querySelector('em').textContent=limLabel;
-}
-function legend(id,segs){$(id).innerHTML=segs.filter(function(s){return s[1]>0;}).map(function(s){return '<span><i style="background:var('+s[2]+')"></i>'+s[0]+' '+fmt(s[1])+'</span>';}).join('');}
-function pill(lv,txt){return '<span class="pill '+lv+'">'+txt+'</span>';}
-function renderMemory(){
-  var m=state.mem,r=memCalc(m),p=PART[m.part];
-  $('mPart').value=m.part;$('mWifi').checked=m.wifi;$('mWeb').checked=m.web&&m.wifi;$('mWeb').disabled=!m.wifi;$('mBle').checked=m.ble;
-  $('mFmt').value=String(m.fmt);$('mSize').value=String(m.size);$('mFrames').value=m.frames;$('mFramesV').textContent=m.frames+' 張';$('mFrames').disabled=!m.fmt;$('mSize').disabled=!m.fmt;
-  $('mCanvas').checked=m.canvas;$('mChars').value=m.chars;$('mCharsV').textContent=fmt(m.chars)+' 字';$('mPx').value=String(m.px);
-  var fp=r.fTotal/r.limit*100,over=r.fTotal>r.limit;
-  $('fPct').textContent=Math.floor(fp)+'%';
-  $('fPill').innerHTML=over?pill('bad','超出 '+fmt((r.fTotal-r.limit)/1024)+' KB，燒不進去'):(fp>85?pill('warn','快滿了'):pill('ok','裝得下'));
-  drawBar('fBar','fLimit',r.flash,r.fTotal,r.limit,'上限 '+fmt(r.limit));legend('fLegend',r.flash);
-  $('fText').textContent='用了 '+fmt(r.fTotal)+' / '+fmt(r.limit)+' 位元組'+(over?'。編譯器會回報 Sketch too big。':'，還剩 '+fmt((r.limit-r.fTotal)/1024)+' KB。');
-  var rp=r.rTotal/RAM_TOTAL*100,free=RAM_TOTAL-r.rTotal;
-  $('rPct').textContent=Math.floor(rp)+'%';
-  $('rPill').innerHTML=free<0?pill('bad','不夠用，會當機重啟'):(free<60000?pill('warn','剩太少，不穩定'):pill('ok','夠用'));
-  drawBar('rBar','rLimit',r.ram,r.rTotal,RAM_TOTAL,'上限 '+fmt(RAM_TOTAL));legend('rLegend',r.ram);
-  $('rText').textContent='預估用掉 '+fmt(r.rTotal)+' / '+fmt(RAM_TOTAL)+' 位元組'+(free>=0?'，剩 '+fmt(free/1024)+' KB。':'。');
-  $('pMap').innerHTML=p.map.map(function(s){return '<span title="'+s[0]+'：'+fmt(s[1])+' KB" style="width:'+(s[1]/4060*100)+'%;background:var('+s[2]+')">'+(s[1]>300?s[0].replace(/（.*/,'')+' '+(s[1]/1024).toFixed(2)+'MB':'')+'</span>';}).join('');
-  $('pText').textContent=p.ota?'這張分割表留了兩塊一樣大的程式區，一塊放現在的程式，一塊給無線更新（OTA）備用。所以 4MB 裡你的程式只能用 '+(p.app/1048576).toFixed(2)+'MB。':'這張分割表不留 OTA 備份區，程式可以用到 '+(p.app/1048576).toFixed(2)+'MB，代價是之後只能插 USB 線更新。';
-  // advice
-  var a=[];
-  if(over){
-    var fit=['default','min_spiffs','no_ota','huge_app'].filter(function(k){return PART[k].app>=r.fTotal;})[0];
-    if(fit&&fit!==m.part)a.push('換成「'+PART[fit].name+'」就裝得下'+(PART[fit].ota?'。':'，但會失去 OTA 無線更新。'));
-    else if(!fit)a.push('連 3MB 的 Huge APP 都裝不下，一定要砍內容。');
-  }
-  if(m.fmt===16&&r.img>0){var mono=m.frames*Math.ceil(m.size*m.size/8);a.push('全彩圖片佔了 '+fmt(r.img/1024)+' KB。改成單色只要 '+fmt(mono/1024)+' KB，是原本的 1/16。');}
-  if(r.img>200000)a.push('Mochi 的眼睛和嘴巴可以用 fillRoundRect、fillCircle 這類指令直接畫，幾乎不佔 Flash。表情越多差越大。');
-  if(m.fmt&&m.size===240&&m.frames>0)a.push('不一定要存全螢幕。只存 120 × 120 的臉部區塊，一張就從 '+fmt(Math.ceil(240*240*m.fmt/8))+' 降到 '+fmt(Math.ceil(120*120*m.fmt/8))+' 位元組。');
-  if(m.chars>=1000)a.push('中文字型每個字佔 '+r.glyph+' 位元組。只收錄會用到的字（例如 200 個）就只要 '+fmt(200*r.glyph/1024)+' KB。');
-  if(m.wifi&&m.ble)a.push('WiFi 和 BLE 同時開，兩套無線協定堆疊加起來超過 1MB。只留一種是最省的做法。');
-  if(m.canvas)a.push('全螢幕畫布固定吃掉 115,200 位元組 RAM（240 × 240 × 2）。改成只重畫有變動的小區塊，或用 120 × 120 的小畫布（28,800 位元組）。');
-  if(free<60000&&free>=0)a.push('RAM 剩不到 60 KB。WiFi 連線、網頁請求都要臨時借記憶體，太少會隨機重啟。');
-  if(!a.length)a.push(fp<50?'空間很充裕。現在的顏文字是用文字指令畫的，不佔圖片空間。':'目前裝得下，再加功能前先回來算一次。');
-  $('advice').innerHTML=a.map(function(x){return '<li>'+x+'</li>';}).join('');
-  var calc=m.fmt&&m.frames?('圖片：'+m.size+' × '+m.size+' × '+m.fmt+' bit ÷ 8 = '+fmt(Math.ceil(m.size*m.size*m.fmt/8))+' 位元組 / 張 × '+m.frames+' 張 = '+fmt(r.img)+' 位元組'):'一張全螢幕全彩圖：240 × 240 × 16 bit ÷ 8 = 115,200 位元組';
-  $('calc').textContent=calc;
-  if(over)setFlag('memOver');else if(state.flags.memOver&&r.fTotal>BASE_FLASH)setFlag('memFixed');
-}
-function setMem(patch){Object.assign(state.mem,patch);store.set('mem',state.mem);renderMemory();}
-
-/* ================= LESSONS ================= */
-var LESSONS=[
- {t:'認識 SuperMini',s:'16 個焊孔、一顆晶片、兩顆按鈕',
-  body:['ESP32-C3 SuperMini 只有 22.5 × 18 mm，比一個硬幣還小。兩排各 8 個焊孔，總共 16 個：3 個是電源（5V、GND、3V3），其餘 13 個是可以用程式控制的 GPIO。','板子上還有三樣已經接好的東西：GPIO 8 上的藍色 LED、GPIO 9 上的 BOOT 鈕，以及重新開機用的 RST 鈕。'],
-  tasks:[{flag:'pins5',text:'在腳位圖點開 5 根不同的腳',go:'pins',label:'去腳位圖'}],
-  quiz:{q:'SuperMini 上有幾根可以用程式控制的 GPIO？',opts:['8 根','13 根','16 根','22 根'],a:1,why:'16 個焊孔扣掉 5V、GND、3V3，剩 13 根：GPIO 0–10、20、21。'}},
- {t:'電源腳：3V3、5V、GND',s:'接錯電壓是最貴的錯誤',
-  body:['3V3 是板上穩壓器輸出的 3.3V，Mochi 的螢幕就吃這個。5V 直接來自 USB，只給明確標示要 5V 的模組用。','所有 GPIO 都只承受 3.3V。把 5V 接進 GPIO 或螢幕的 VCC，都可能直接燒壞。GND 則要全部接在一起，沒有共地，訊號就沒有參考點。'],
-  tasks:[],
-  quiz:{q:'Mochi 螢幕的 VCC 要接哪裡？',opts:['5V','3V3','GPIO 3','GND'],a:1,why:'ST7789 這塊螢幕是 3.3V 元件。接 5V 可能燒壞，GPIO 則推不動它。'}},
- {t:'安全腳位：0、1、3、4、10',s:'新手先從這幾根開始',
-  body:['這五根沒有開機任務，也沒有被板上的 LED 或按鈕佔用。接 LED、繼電器、感測器，先從它們挑。','其中 GPIO 10 最單純，連預設的通訊功能都沒有。GPIO 0、1、3、4 另外還能讀類比訊號。'],
-  tasks:[],
-  quiz:{q:'想接一顆外部 LED 來閃，哪一根最省心？',opts:['GPIO 9','GPIO 2','GPIO 10','GPIO 8'],a:2,why:'2、8、9 都是開機腳位，8 還接著板上 LED，9 接著 BOOT 鈕。GPIO 10 沒有任何包袱。'}},
- {t:'開機腳位：2、8、9',s:'通電那一瞬間不能亂碰',
-  body:['晶片通電時會先看這三根腳的電位，決定要正常執行程式，還是進入燒錄模式。GPIO 9 是低電位就進燒錄模式，這也是 BOOT 鈕的原理。','開機完成後它們就是普通的 GPIO。Mochi 把螢幕的 RES 接在 GPIO 2、時脈接在 GPIO 8，因為這兩條線平常都不會把腳位拉低。'],
-  tasks:[],
-  quiz:{q:'通電時一直按著接在 GPIO 9 的按鈕，會怎樣？',opts:['螢幕變更亮','進入燒錄模式，程式不跑','板子燒壞','沒有影響'],a:1,why:'GPIO 9 在開機瞬間是低電位，晶片就等著被燒錄。在接線模擬裡勾「通電時按住按鈕」可以親眼看一次。'}},
- {t:'類比與通訊',s:'ADC、SPI、I2C、UART 各用哪幾根',
-  body:['GPIO 0–4 接著 ADC1，可以讀可變電阻、光敏電阻這種連續變化的電壓。GPIO 5 屬於 ADC2，WiFi 開著時讀不準。','SPI 線多但快，螢幕用它。I2C 只要兩條線，適合感測器。UART 是 GPIO 20、21。C3 的好處是 SPI 和 I2C 可以用程式指定到幾乎任何腳，所以 Mochi 才能把 SPI 放在 8 和 10。'],
-  tasks:[],
-  quiz:{q:'WiFi 開著的時候要讀一顆可變電阻，選哪根？',opts:['GPIO 5','GPIO 3','GPIO 10','GPIO 21'],a:1,why:'GPIO 3 是 ADC1_CH3。GPIO 5 是 ADC2，會被 WiFi 干擾；10 和 21 沒有類比功能。'}},
- {t:'接上 Mochi 螢幕',s:'8 條螢幕線加 2 條按鈕線',
-  body:['照 Clawd Mochi 的排線：VCC→3V3、GND→GND、SCL→GPIO 8、SDA→GPIO 10、RES→GPIO 2、DC→GPIO 1、CS→GPIO 4、BLK→GPIO 3。按鈕一腳接 GPIO 9，另一腳接 GND。','線接在哪一根腳，程式裡的 #define 就要寫同一個數字。兩邊對不上，螢幕就是一片空白。'],
-  tasks:[{flag:'wired',text:'在接線模擬把 10 條線接對，然後通電',go:'wiring',label:'去接線'}],
-  quiz:{q:'螢幕有背光，但整片空白沒有字。最可能的原因？',opts:['沒接 GND','訊號線接的腳和程式不一致','USB 線太短','BLK 沒接'],a:1,why:'背光亮代表電源和 BLK 都對。沒畫面通常是 SCL、SDA、CS、DC、RES 其中一條和程式裡的腳位對不上。'}},
- {t:'按鈕與顏文字',s:'INPUT_PULLUP 是什麼意思',
-  body:['程式把按鈕腳設成 INPUT_PULLUP，晶片內部會用一顆電阻把它拉到 3.3V，所以平常讀到 HIGH。按鈕另一腳接 GND，按下去就把腳位拉到 0V，讀到 LOW。','所以按鈕不需要接 3V3。接了反而永遠是 HIGH，按再多下都沒反應。'],
-  tasks:[{flag:'faces3',text:'通電後按 3 次按鈕，換 3 個表情',go:'wiring',label:'去按按鈕'}],
-  quiz:{q:'用 INPUT_PULLUP 時，按下按鈕會讀到什麼？',opts:['HIGH','LOW','3.3','不一定'],a:1,why:'平常被內部電阻拉高是 HIGH，按下去接到 GND 變成 LOW。所以程式判斷的是「變成 LOW 的那一刻」。'}},
- {t:'空間限制：Flash 與 RAM',s:'4MB 不是全部給你的程式',
-  body:['SuperMini 有 4MB Flash，但預設分割表只給程式 1,310,720 位元組，大約 1.25MB。另一半留給 OTA 無線更新，剩下的是檔案系統。你的顏文字遊戲編譯出來是 341,634 位元組，佔 26%。','一張 240 × 240 的全彩圖就要 115,200 位元組。存 8 張表情就超過 900KB。WiFi 和 BLE 同時開也會直接爆掉。RAM 只有 327,680 位元組，一塊全螢幕畫布就吃掉三分之一。'],
-  tasks:[{flag:'memOver',text:'在空間預算把 Flash 加到超出上限',go:'memory',label:'去試試'},{flag:'memFixed',text:'再想辦法救回來（換分割表或砍內容）',go:'memory',label:'去解決'}],
-  quiz:{q:'一張 240 × 240、16-bit 全彩的圖要佔多少空間？',opts:['57,600 位元組','115,200 位元組','240,000 位元組','1,310,720 位元組'],a:1,why:'240 × 240 = 57,600 個像素，每個像素 2 位元組，所以是 115,200 位元組。'}}
-];
-function lessonDone(i){var L=LESSONS[i];return state.quiz[i]===L.quiz.a&&L.tasks.every(function(t){return state.flags[t.flag];});}
-function renderLessons(){
-  var done=0;
-  var h=LESSONS.map(function(L,i){
-    var d=lessonDone(i);if(d)done++;var open=state.open===i;
-    var s='<div class="lesson'+(d?' done':'')+(open?' open':'')+'"><button type="button" data-lesson="'+i+'" aria-expanded="'+open+'"><span class="lnum">'+(d?'✓':(i+1))+'</span><span class="lt"><b>'+L.t+'</b><span>'+L.s+'</span></span><span class="chev" aria-hidden="true">›</span></button>';
-    if(open){
-      s+='<div class="lbody">'+L.body.map(function(p){return '<p>'+p+'</p>';}).join('');
-      L.tasks.forEach(function(t){var td=!!state.flags[t.flag];s+='<div class="task'+(td?' done':'')+'"><i class="st" aria-hidden="true"></i><span>'+t.text+(td?'（完成）':'')+'</span><a class="btn small" href="#'+t.go+'">'+t.label+'</a></div>';});
-      var ans=state.quiz[i],q=L.quiz;
-      s+='<div class="quiz"><p class="q">'+q.q+'</p><div class="opts">'+q.opts.map(function(o,k){var c='';if(ans===k)c=k===q.a?' right':' wrong';return '<button type="button" class="opt'+c+'" data-q="'+i+'" data-k="'+k+'">'+o+'</button>';}).join('')+'</div>';
-      if(ans!=null)s+='<p class="why">'+(ans===q.a?'答對了。':'再想一下。')+(ans===q.a?q.why:'')+'</p>';
-      s+='</div></div>';
-    }
-    return s+'</div>';
-  }).join('');
-  $('lessonList').innerHTML=h;
-  $('prog').textContent=done+' / '+LESSONS.length;
-  $('progText').textContent='已完成 '+done+' / '+LESSONS.length+' 課';
-  $('progBar').style.width=(done/LESSONS.length*100)+'%';
-}
-
 /* ================= routing & events ================= */
-var VIEWS=['lessons','pins','wiring','memory'];
+var VIEWS=['pins','wiring'];
 function showView(){
-  var v=(location.hash||'').replace('#','');if(VIEWS.indexOf(v)<0)v='lessons';
+  var v=(location.hash||'').replace('#','');if(VIEWS.indexOf(v)<0)v='pins';
   VIEWS.forEach(function(k){$('view-'+k).hidden=k!==v;});
   var tabs=document.querySelectorAll('.tabs a');for(var i=0;i<tabs.length;i++){if(tabs[i].getAttribute('data-tab')===v)tabs[i].setAttribute('aria-current','page');else tabs[i].removeAttribute('aria-current');}
-  if(v==='wiring')refreshWiring();
-  if(v==='memory')renderMemory();
+  if(v==='wiring'){refreshWiring();renderBudget();}
   window.scrollTo(0,0);
 }
 function keyActivate(e,fn){if(e.key==='Enter'||e.key===' '){e.preventDefault();fn(e);}}
 
 function init(){
-  renderFilters();renderPinBoard();renderPinDetail();renderPinTable();
+  renderFilters();renderPinBoard();renderPinDetail();
   $('benchSvg').innerHTML=benchMarkup();
   renderCode();
   $('mPart').innerHTML=Object.keys(PART).map(function(k){return '<option value="'+k+'">'+PART[k].name+'</option>';}).join('');
-  $('presets').innerHTML=PRESETS.map(function(p,i){return '<button type="button" class="chip" data-preset="'+i+'">'+p[0]+'</button>';}).join('');
   $('hintChk').checked=state.hint;
-  renderLessons();renderMemory();refreshWiring();
+  refreshWiring();renderBudget();
   log('（尚未通電）');
 
   window.addEventListener('hashchange',showView);
-  // lessons
-  $('lessonList').addEventListener('click',function(e){
-    var b=e.target.closest('[data-lesson]');if(b){var i=+b.getAttribute('data-lesson');state.open=state.open===i?-1:i;store.set('open',state.open);renderLessons();return;}
-    var o=e.target.closest('[data-q]');if(o){var qi=+o.getAttribute('data-q');state.quiz[qi]=+o.getAttribute('data-k');store.set('quiz',state.quiz);renderLessons();}
-  });
-  $('resetAll').addEventListener('click',function(){
-    store.clear();state.flags={};state.quiz={};state.viewed=[];state.open=0;state.wires={VCC:'3V3',GND:'GND'};state.code=Object.assign({},DEFAULT_CODE);
-    state.mem=Object.assign({},PRESETS[0][1]);state.powered=false;state.sel=null;state.serial=[];
-    renderLessons();renderCode();renderMemory();refreshWiring();log('（尚未通電）');toast('進度已清空。');
-  });
-  // pin map
   $('filters').addEventListener('click',function(e){var b=e.target.closest('[data-f]');if(!b)return;state.filter=b.getAttribute('data-f');renderFilters();updatePinBoard();});
   $('pinBoard').addEventListener('click',function(e){var p=e.target.closest('[data-bpin]');if(p)selectPin(p.getAttribute('data-bpin'));});
   $('pinBoard').addEventListener('keydown',function(e){var p=e.target.closest('[data-bpin]');if(p)keyActivate(e,function(){selectPin(p.getAttribute('data-bpin'));});});
-  $('pinTable').addEventListener('click',function(e){var r=e.target.closest('[data-row]');if(r)selectPin(r.getAttribute('data-row'));});
-  // wiring
+
   $('benchSvg').addEventListener('click',onBenchClick);
-  $('benchSvg').addEventListener('keydown',function(e){if(e.target.closest('[data-comp],[data-bpin]')||e.target.id==='btnCap')keyActivate(e,onBenchClick);});
+  $('benchSvg').addEventListener('keydown',function(e){if(e.target.closest('[data-comp],[data-bpin]'))keyActivate(e,onBenchClick);});
   $('connTable').addEventListener('change',function(e){var s=e.target.closest('[data-conn]');if(s)setWire(s.getAttribute('data-conn'),s.value||null);});
   $('codePins').addEventListener('change',function(e){var s=e.target.closest('[data-code]');if(!s)return;state.code[s.getAttribute('data-code')]=+s.value;store.set('code',state.code);
-    if(state.powered){state.powered=false;log('-- 程式改了，重新燒錄：已斷電 --');}renderCode();refreshWiring();});
-  $('powerBtn').addEventListener('click',function(){if(state.powered){state.powered=false;log('-- 斷電 --');refreshWiring();}else powerOn();});
-  $('autoBtn').addEventListener('click',function(){var ex=expected();state.wires=Object.assign({},ex);store.set('wires',state.wires);state.powered=false;state.sel=null;refreshWiring();toast('已照程式裡的腳位接好 10 條線。');});
-  $('clearBtn').addEventListener('click',function(){state.wires={};store.set('wires',state.wires);state.powered=false;state.sel=null;refreshWiring();});
+    powerOff('-- 程式改了，重新燒錄：已斷電 --');renderCode();refreshWiring();});
+  $('powerBtn').addEventListener('click',function(){if(state.powered){powerOff('-- 斷電 --');refreshWiring();}else powerOn();});
+  $('autoBtn').addEventListener('click',function(){state.wires=Object.assign({},expected());store.set('wires',state.wires);powerOff();state.sel=null;refreshWiring();toast('已照程式裡的腳位接好 8 條線。');});
+  $('clearBtn').addEventListener('click',function(){state.wires={};store.set('wires',state.wires);powerOff();state.sel=null;refreshWiring();});
   $('hintChk').addEventListener('change',function(e){state.hint=e.target.checked;refreshWiring();});
-  $('holdChk').addEventListener('change',function(e){state.hold=e.target.checked;if(state.powered){state.powered=false;log('-- 斷電 --');}refreshWiring();});
-  $('copyCode').addEventListener('click',function(){var txt=plainCode();
+  $('holdChk').addEventListener('change',function(e){state.hold=e.target.checked;powerOff('-- 斷電 --');refreshWiring();});
+  $('copyCode').addEventListener('click',function(){var txt=$('codeView').textContent;
     function fb(){var r=document.createRange();r.selectNodeContents($('codeView'));var s=window.getSelection();s.removeAllRanges();s.addRange(r);toast('已選取程式碼，按 Ctrl/Cmd + C 複製。');}
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(function(){toast('已複製。');},fb);else fb();});
-  document.addEventListener('keydown',function(e){
-    if(e.key===' '&&!$('view-wiring').hidden&&state.powered&&!/^(INPUT|SELECT|BUTTON|TEXTAREA|A)$/.test(e.target.tagName)&&!e.target.closest('[data-comp],[data-bpin]')&&e.target.id!=='btnCap'){e.preventDefault();pressButton();}
-  });
-  // memory
-  $('presets').addEventListener('click',function(e){var b=e.target.closest('[data-preset]');if(b)setMem(Object.assign({},PRESETS[+b.getAttribute('data-preset')][1]));});
-  $('mPart').addEventListener('change',function(e){setMem({part:e.target.value});});
-  $('mWifi').addEventListener('change',function(e){setMem({wifi:e.target.checked,web:e.target.checked?state.mem.web:false});});
-  $('mWeb').addEventListener('change',function(e){setMem({web:e.target.checked});});
-  $('mBle').addEventListener('change',function(e){setMem({ble:e.target.checked});});
-  $('mFmt').addEventListener('change',function(e){var f=+e.target.value;setMem({fmt:f,frames:f&&!state.mem.frames?4:state.mem.frames});});
-  $('mSize').addEventListener('change',function(e){setMem({size:+e.target.value});});
-  $('mFrames').addEventListener('input',function(e){setMem({frames:+e.target.value});});
-  $('mCanvas').addEventListener('change',function(e){setMem({canvas:e.target.checked});});
-  $('mChars').addEventListener('input',function(e){setMem({chars:+e.target.value});});
-  $('mPx').addEventListener('change',function(e){setMem({px:+e.target.value});});
+
+  // controller
+  $('ctlBtns').addEventListener('click',function(e){var b=e.target.closest('[data-view]');if(b&&!b.disabled)setView(b.getAttribute('data-view'));});
+  $('blBtn').addEventListener('click',function(){state.bl=!state.bl;log('GET /backlight?on='+(state.bl?1:0));if(!state.bl&&!evaluate().blWired)toast('BLK 直接接在 3.3，程式關不掉背光。');drawLcd();renderCtl();});
+  $('speedSel').addEventListener('change',function(e){state.speed=+e.target.value;if(state.ready)log('GET /speed?v='+state.speed);});
+  $('bgSw').addEventListener('click',function(e){var b=e.target.closest('[data-bg]');if(!b)return;state.bg=b.getAttribute('data-bg');if(state.ready)log('GET /redraw?bg='+state.bg.slice(1));drawLcd();renderCtl();if(state.view==='canvas')renderPad();});
+  $('penSw').addEventListener('click',function(e){var b=e.target.closest('[data-pen]');if(!b)return;state.pen=b.getAttribute('data-pen');renderCtl();});
+  $('termForm').addEventListener('submit',function(e){e.preventDefault();var v=$('termIn').value.replace(/[^\x20-\x7e]/g,'');if(state.view!=='code')return;
+    for(var i=0;i<v.length;i++)termChar(v[i]);termChar('\n');log('GET /char × '+(v.length+1)+'　"'+v+'"');$('termIn').value='';drawLcd();});
+  $('padClear').addEventListener('click',function(){state.strokes=[];log('GET /draw/clear');renderPad();drawLcd();});
+  var drawing=null;
+  function padPt(e){var r=$('padBox').getBoundingClientRect();return [Math.max(0,Math.min(239,Math.round((e.clientX-r.left)/r.width*240))),Math.max(0,Math.min(239,Math.round((e.clientY-r.top)/r.height*240)))];}
+  $('padBox').addEventListener('pointerdown',function(e){if(state.view!=='canvas')return;e.preventDefault();drawing={color:state.pen,pts:[padPt(e)]};state.strokes.push(drawing);try{$('padBox').setPointerCapture(e.pointerId);}catch(x){}renderPad();drawLcd();});
+  $('padBox').addEventListener('pointermove',function(e){if(!drawing)return;var p=padPt(e),q=drawing.pts[drawing.pts.length-1];if(Math.abs(p[0]-q[0])+Math.abs(p[1]-q[1])<3)return;drawing.pts.push(p);renderPad();drawLcd();});
+  function endDraw(){if(!drawing)return;log('GET /draw/stroke　'+drawing.pts.length+' 個點');drawing=null;}
+  $('padBox').addEventListener('pointerup',endDraw);$('padBox').addEventListener('pointercancel',endDraw);
+
+  // budget
+  $('fxRows').addEventListener('change',function(e){var c=e.target.closest('[data-feat]');if(!c)return;var k=c.getAttribute('data-feat');state.feat[k]=c.checked;store.set('feat',state.feat);
+    if(state.powered){powerOff('-- 韌體內容改了，重新燒錄：已斷電 --');toast('韌體內容改了，已斷電。再按一次「通電」。');refreshWiring();}else renderCtl();
+    renderBudget();var again=$('fx_'+k);if(again)again.focus();});
+  $('mPart').addEventListener('change',function(e){state.part=e.target.value;store.set('part',state.part);renderBudget();});
+  $('imgN').addEventListener('input',function(e){state.imgs=+e.target.value;renderBudget();});
+
+  // popup
+  $('scrim').addEventListener('click',function(e){if(e.target===$('scrim')||e.target.closest('[data-close]'))closeModal();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('scrim').hidden)closeModal();});
   showView();
 }
 init();
