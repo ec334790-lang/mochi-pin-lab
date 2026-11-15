@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="ESP32-C3 SuperMini 腳位互動學習：腳位圖、Clawd Mochi 螢幕接線模擬、實測 Flash/RAM 空間預算。">
+<meta name="description" content="ESP32-C3 SuperMini 腳位互動學習：腳位圖、Clawd Mochi 接線模擬、空間預算、燒錄體驗。">
 <style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Mochi 腳位實驗室</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -215,6 +215,54 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
 footer .wrap{padding-block:18px}
 
+/* flash simulator */
+.fgrid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;align-items:start}
+.fgrid > .stack:last-child{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px)}
+.steps{list-style:none;margin:0 0 16px;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.steps li{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.35}
+.steps .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:14px;background:var(--sunken);border:1px solid var(--line);color:var(--muted)}
+.steps li.now{color:var(--accent-ink);font-weight:700} .steps li.now .n{background:var(--accent);border-color:var(--accent);color:#fff}
+.steps li.done .n{background:var(--ok);border-color:var(--ok);color:#fff}
+.steps li.bad .n{background:var(--bad);border-color:var(--bad);color:#fff}
+.stepcard{display:flex;flex-direction:column;gap:12px}
+.stepcard h3{display:flex;align-items:center;gap:10px}
+.stepcard h3 .n{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font-family:var(--f-display);font-size:13px}
+.editor{background:var(--code-bg);color:var(--code-ink);border-radius:11px;padding:12px 0;font-family:var(--f-mono);font-size:13.5px;line-height:1.9;overflow-x:auto}
+.editor .ln{display:flex;white-space:pre;padding-right:14px}
+.editor .ln i{font-style:normal;flex:none;width:34px;text-align:right;padding-right:12px;color:#4E6A80;user-select:none}
+.editor .c{color:var(--code-dim)} .editor .k{color:#8FB8FF} .editor .s{color:#9FE0B5}
+.editor input,.editor select{font-family:var(--f-mono);font-size:13px;background:#1E3A52;color:#FFE3B0;border:1px dashed #F5B45F;border-radius:6px;padding:1px 6px;height:26px;vertical-align:middle}
+.editor input{width:13ch}
+.editor input:focus,.editor select:focus{outline:2px solid #F5B45F;outline-offset:1px}
+.choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.opt2{border:2px solid var(--line);background:var(--surface);border-radius:12px;padding:12px;cursor:pointer;text-align:left;display:flex;gap:12px;align-items:center}
+.opt2:hover{border-color:var(--accent)}
+.opt2[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt2 b{display:block;font-size:15px} .opt2 small{display:block;color:var(--muted);font-size:12.5px;line-height:1.45}
+.opt2 svg{flex:none;width:46px;height:30px}
+.setrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 14px}
+.setrow select{width:100%;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.tbtn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:999px;padding:9px 18px;font-weight:700;font-size:15px;cursor:pointer;color:#fff}
+.tbtn i{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-style:normal;font-size:14px}
+.tbtn.verify{background:#00878F} .tbtn.upload{background:#E07B00}
+.tbtn:disabled{opacity:.45;cursor:not-allowed}
+.console{background:#0B141C;color:#C9D6E2;font-family:var(--f-mono);font-size:12.3px;line-height:1.65;border-radius:11px;padding:10px 13px;height:230px;overflow-y:auto;white-space:pre-wrap;word-break:break-word}
+.console .z{color:#7FA0BA} .console .e{color:#FF8E8E} .console .o{color:#7EE2A8} .console .w{color:#F5C46A}
+.pbar{height:12px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);overflow:hidden}
+.pbar span{display:block;height:100%;width:0;background:#E07B00;transition:width .15s linear}
+.device{display:flex;flex-direction:column;align-items:center;gap:12px}
+.device .scr{width:min(260px,100%);border-radius:14px;background:#1E4E9E;padding:14px;box-shadow:var(--shadow)}
+.device .scr svg{border-radius:6px;border:4px solid #0A0E13;width:100%;background:#05080B}
+.device .chipline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
+.fbanner{border-radius:12px;padding:12px 14px;font-size:14.5px;display:flex;gap:10px;align-items:flex-start}
+.fbanner b{display:block}
+.fbanner.bad{background:var(--bad-soft);color:var(--bad)} .fbanner.ok{background:var(--ok-soft);color:var(--ok)} .fbanner.info{background:var(--accent-soft);color:var(--accent-ink)}
+.fbanner .ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--f-display);font-weight:700;font-size:12px;margin-top:1px}
+.fbanner.bad .ic{background:var(--bad)} .fbanner.ok .ic{background:var(--ok)} .fbanner.info .ic{background:var(--accent)}
+.smon{background:var(--code-bg);color:var(--code-ink);font-family:var(--f-mono);font-size:12.3px;border-radius:10px;padding:9px 12px;min-height:92px;white-space:pre-wrap;line-height:1.6}
+@media (max-width: 860px){.fgrid{grid-template-columns:minmax(0,1fr)} .fgrid > .stack:last-child{position:static} .steps{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width: 520px){.choice,.setrow{grid-template-columns:minmax(0,1fr)}}
 @media (max-width: 1120px){.pgrid{grid-template-columns:minmax(0,400px) minmax(0,1fr)} .pgrid .fxcard{grid-column:1 / -1}}
 @media (max-width: 860px){.pgrid,.wgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width: 520px){.two{grid-template-columns:minmax(0,1fr)} .ctltop{grid-template-columns:104px minmax(0,1fr)} .ctl{grid-template-columns:repeat(2,minmax(0,1fr))} .fxrow{grid-template-columns:minmax(0,1fr) auto} .fxrow .mini{display:none}}
@@ -228,6 +276,7 @@ footer .wrap{padding-block:18px}
     <nav class="tabs" aria-label="主選單">
       <a href="#pins" data-tab="pins">腳位圖</a>
       <a href="#wiring" data-tab="wiring">接線模擬</a>
+      <a href="#flash" data-tab="flash">燒錄體驗</a>
     </nav>
   </div>
 </header>
@@ -325,6 +374,64 @@ footer .wrap{padding-block:18px}
         <div class="two" id="codePins"></div>
         <pre class="codeblock" id="codeView"></pre>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FLASH ================= -->
+<section class="view" id="view-flash" hidden>
+  <div class="viewhead">
+    <p class="eyebrow">Upload simulator</p>
+    <h1>燒錄體驗</h1>
+    <p class="lead">把程式「燒」進 Mochi 的大腦，就像 Arduino IDE 一樣：改程式、插 USB、選板子、按上傳。這頁假設 8 條線都已經接好了。</p>
+  </div>
+  <ol class="steps" id="fxSteps" aria-label="燒錄步驟"></ol>
+  <div class="fgrid">
+    <div class="stack">
+      <div class="card pad stepcard">
+        <h3><span class="n">1</span>改程式</h3>
+        <p class="note">虛線框的地方可以改。開機文字只能用英文、數字和符號，最多 10 個字。</p>
+        <div class="editor" id="fxEditor"></div>
+      </div>
+      <div class="card pad stepcard">
+        <h3><span class="n">2</span>接上 USB 線</h3>
+        <div class="choice" id="fxCable" role="group" aria-label="選一條 USB 線"></div>
+      </div>
+      <div class="card pad stepcard">
+        <h3><span class="n">3</span>選開發板</h3>
+        <div class="setrow">
+          <label class="field"><span>開發板</span><select id="fxBoard">
+            <option value="esp32c3">ESP32C3 Dev Module</option>
+            <option value="esp32">ESP32 Dev Module</option>
+            <option value="uno">Arduino Uno</option></select></label>
+          <label class="field"><span>連接埠</span><select id="fxPort"></select></label>
+          <label class="field"><span>USB CDC On Boot</span><select id="fxCdc"><option value="1">Enabled</option><option value="0">Disabled</option></select></label>
+          <label class="field"><span>Upload Speed</span><select id="fxSpeed"><option value="921600">921600</option><option value="115200">115200</option></select></label>
+        </div>
+      </div>
+      <div class="card pad stepcard">
+        <h3><span class="n">4</span>驗證、上傳</h3>
+        <div class="toolbar">
+          <button type="button" class="tbtn verify" id="fxVerify"><i aria-hidden="true">✓</i>驗證</button>
+          <button type="button" class="tbtn upload" id="fxUpload"><i aria-hidden="true">→</i>上傳</button>
+          <span class="note" id="fxPhase"></span>
+        </div>
+        <div class="pbar" aria-hidden="true"><span id="fxBar"></span></div>
+        <div class="console" id="fxConsole" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card pad device">
+        <h3 style="align-self:flex-start">你的 Mochi</h3>
+        <div class="scr"><svg viewBox="0 0 240 240" id="fxScreen" role="img" aria-label="Mochi 螢幕"></svg></div>
+        <div class="chipline"><span id="fxUsbPill"></span><span id="fxLedPill"></span></div>
+      </div>
+      <div id="fxResult"></div>
+      <div class="card pad stack">
+        <h3>序列埠監控視窗</h3>
+        <div class="smon" id="fxMon" aria-live="polite"></div>
+      </div>
+      <button type="button" class="btn" id="fxReset" style="align-self:flex-start">重新開始</button>
     </div>
   </div>
 </section>
@@ -840,8 +947,199 @@ function onBenchClick(e){
   if(state.sel){state.sel=null;refreshWiring();}
 }
 
+/* ================= FLASH SIMULATOR ================= */
+var FCOL=[['#E9A23B','ORANGE','橘'],['#2E86AB','BLUE','藍'],['#3FA36C','GREEN','綠'],['#D9638A','PINK','粉'],['#0B1320','BLACK','黑']];
+var fs={text:'Mochi',color:0,anim:2,cable:'none',board:'esp32c3',port:'',cdc:1,speed:921600,
+        busy:false,compiled:null,flashed:null,result:null,run:0};
+(function(){var sv=store.get('flash',null);if(sv){if(typeof sv.text==='string')fs.text=sv.text;if(sv.color>=0&&sv.color<FCOL.length)fs.color=sv.color;if(sv.anim)fs.anim=sv.anim;}})();
+function fSave(){store.set('flash',{text:fs.text,color:fs.color,anim:fs.anim});}
+function fConfigKey(){return [fs.text,fs.color,fs.anim,fs.board,fs.cdc].join('|');}
+function fRenderEditor(){
+  var colOpts=FCOL.map(function(c,i){return '<option value="'+i+'"'+(i===fs.color?' selected':'')+'>'+c[1]+'</option>';}).join('');
+  var spOpts=[[1,'1  // 慢'],[2,'2  // 普通'],[3,'3  // 快']].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===fs.anim?' selected':'')+'>'+o[1]+'</option>';}).join('');
+  var L=[
+    '<span class="c">// Clawd Mochi 開機畫面：改改看！</span>',
+    '<span class="k">#include</span> <span class="s">&lt;Adafruit_ST7789.h&gt;</span>',
+    '',
+    '<span class="k">String</span>   bootText  = <span class="s">"</span><input id="fxText" maxlength="10" spellcheck="false" autocomplete="off" aria-label="開機文字" value="'+esc(fs.text)+'"><span class="s">"</span>;',
+    '<span class="k">uint16_t</span> bgColor   = <select id="fxColor" aria-label="背景顏色">'+colOpts+'</select>;',
+    '<span class="k">int</span>      animSpeed = <select id="fxAnim" aria-label="動畫速度">'+spOpts+'</select>;',
+    '',
+    '<span class="k">void</span> setup() {',
+    '  Serial.begin(115200);',
+    '  tft.init(240, 240);              <span class="c">// 叫醒螢幕</span>',
+    '  tft.fillScreen(bgColor);         <span class="c">// 塗滿背景色</span>',
+    '  tft.print(bootText);             <span class="c">// 寫上開機文字</span>',
+    '  Serial.println("Hello, " + bootText);',
+    '}'
+  ];
+  $('fxEditor').innerHTML=L.map(function(t,i){return '<div class="ln"><i>'+(i+1)+'</i><span>'+t+'</span></div>';}).join('');
+}
+function fCableSvg(kind){
+  var plug='<rect x="1" y="9" width="12" height="12" rx="3" fill="#9AA6B2"/><rect x="33" y="9" width="12" height="12" rx="3" fill="#9AA6B2"/>';
+  if(kind==='data')return '<svg viewBox="0 0 46 30" aria-hidden="true">'+plug+'<path d="M13 15 C20 4, 26 26, 33 15" stroke="#1766D6" stroke-width="4" fill="none"/><text x="23" y="29" font-size="7" text-anchor="middle" fill="currentColor">DATA</text></svg>';
+  return '<svg viewBox="0 0 46 30" aria-hidden="true">'+plug+'<path d="M13 15 C20 4, 26 26, 33 15" stroke="#B26A00" stroke-width="4" fill="none" stroke-dasharray="3 3"/><text x="23" y="29" font-size="7" text-anchor="middle" fill="currentColor">ONLY ⚡</text></svg>';
+}
+function fRenderCable(){
+  var a=[['data','傳輸線','可以傳資料，也能供電'],['charge','充電線','只能供電，不能傳資料']];
+  $('fxCable').innerHTML=a.map(function(c){return '<button type="button" class="opt2" data-cable="'+c[0]+'" aria-pressed="'+(fs.cable===c[0])+'">'+fCableSvg(c[0])+'<span><b>'+c[1]+'</b><small>'+c[2]+'</small></span></button>';}).join('');
+  var portSel=$('fxPort'),opts='';
+  if(fs.cable==='data')opts='<option value="COM3">COM3（USB 序列裝置）</option>';
+  else opts='<option value="">（找不到連接埠）</option>';
+  portSel.innerHTML=opts;fs.port=fs.cable==='data'?'COM3':'';portSel.value=fs.port;
+  var pill=fs.cable==='none'?'<span class="pill warn">USB：還沒插</span>':(fs.cable==='data'?'<span class="pill ok">USB：傳輸線，COM3</span>':'<span class="pill warn">USB：充電線，有電但沒有連接埠</span>');
+  $('fxUsbPill').innerHTML=pill;
+}
+function fxSteps(){
+  var st=[['改程式',fs.text.length>0],['插 USB',fs.cable==='data'],['選開發板',fs.board==='esp32c3'&&!!fs.port],['驗證',!!fs.compiled&&fs.compiled===fConfigKey()],['上傳',!!fs.flashed],['看結果',fs.result==='ok']];
+  var firstOpen=-1;st.forEach(function(x,i){if(!x[1]&&firstOpen<0)firstOpen=i;});
+  $('fxSteps').innerHTML=st.map(function(x,i){var cls=x[1]?'done':(i===firstOpen?'now':'');if(i===5&&fs.result&&fs.result!=='ok')cls='bad';
+    return '<li class="'+cls+'"><span class="n">'+(x[1]?'✓':(i+1))+'</span>'+x[0]+'</li>';}).join('');
+}
+var fTimers=[];
+function fClearTimers(){fTimers.forEach(clearTimeout);fTimers=[];}
+function fAfter(ms,fn){var t=setTimeout(fn,REDUCED?Math.min(ms,30):ms);fTimers.push(t);}
+function fLog(html){var c=$('fxConsole');c.insertAdjacentHTML('beforeend',html+'\n');c.scrollTop=c.scrollHeight;}
+function fLine(cls,text){fLog('<span class="'+cls+'">'+esc(text)+'</span>');}
+function fxBar(pct){$('fxBar').style.width=pct+'%';}
+function fBusy(b,phase){fs.busy=b;$('fxVerify').disabled=b;$('fxUpload').disabled=b;$('fxPhase').textContent=phase||'';}
+function fBanner(kind,title,body){var ic={bad:'×',ok:'✓',info:'i'}[kind];
+  $('fxResult').innerHTML='<div class="fbanner '+kind+'" role="status"><span class="ic" aria-hidden="true">'+ic+'</span><div><b>'+esc(title)+'</b>'+esc(body)+'</div></div>';
+  fShow($('fxResult'));}
+function fShow(el){if(window.innerWidth>860||!el)return;var r=el.getBoundingClientRect();if(r.top<60||r.bottom>window.innerHeight)el.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'center'});}
+function fSize(){return 1067586+(fs.text.length-10);}
+function fCompile(then){
+  fClearTimers();fBusy(true,'編譯中⋯');fxBar(0);$('fxResult').innerHTML='';$('fxMon').textContent='（等待上傳⋯）';
+  fLine('z','// ① 編譯：把你寫的程式翻譯成晶片看得懂的 0 和 1');
+  fLine('','Compiling sketch...');
+  var nonAscii=/[^\x20-\x7e]/.test(fs.text);
+  var steps=[[400,function(){fxBar(20);fLine('','Compiling core...');}],[500,function(){fxBar(45);fLine('','Compiling libraries: Adafruit GFX, Adafruit ST7789, WiFi, WebServer');}],[600,function(){fxBar(75);fLine('','Linking everything together...');}]];
+  var t=0;steps.forEach(function(s){t+=s[0];fAfter(t,s[1]);});
+  fAfter(t+500,function(){
+    fxBar(100);
+    if(fs.board==='uno'){
+      fLine('e','fatal error: WiFi.h: No such file or directory');
+      fLine('e','Compilation error: exit status 1');
+      fLine('z','// Arduino Uno 沒有 WiFi，找不到 WiFi 的程式庫');
+      fBusy(false);fs.compiled=null;fs.result='err';
+      fBanner('bad','編譯失敗：開發板選錯了','Arduino Uno 沒有 WiFi，也裝不下 Mochi 的程式。到第 3 步把開發板改成 ESP32C3 Dev Module。');fxSteps();return;
+    }
+    if(nonAscii){
+      fLine('w','warning: bootText 裡有中文或特殊符號');
+      fLine('z','// 螢幕內建的字型只有英文、數字和符號，中文會變成亂碼');
+      fBusy(false);fs.compiled=null;fs.result='err';
+      fBanner('bad','先改一下開機文字','螢幕內建的字型只有英文、數字和符號，中文會顯示成亂碼。回到第 1 步，改成英文或數字。');fxSteps();return;
+    }
+    if(!fs.text.length){
+      fLine('w','warning: bootText 是空的');
+      fBusy(false);fs.compiled=null;fs.result='err';
+      fBanner('bad','開機文字是空的','回到第 1 步，幫你的 Mochi 取個名字。');fxSteps();return;
+    }
+    if(fs.board==='esp32'){fLine('o','編譯完成（目標晶片：ESP32）');}
+    else{
+      fLine('o','Sketch uses '+fmt(fSize())+' bytes (81%) of program storage space. Maximum is 1,310,720 bytes.');
+      fLine('o','Global variables use 37,152 bytes (11%) of dynamic memory.');
+    }
+    fs.compiled=fConfigKey();fs.result=null;fBusy(false,'編譯完成');fxSteps();
+    if(then)then();
+  });
+}
+function fUploadRun(){
+  fBusy(true,'上傳中⋯');fxBar(0);
+  fLine('z','// ② 上傳：透過 USB 線把翻譯好的程式寫進 Mochi 的 Flash');
+  if(fs.cable==='none'||!fs.port){
+    fAfter(500,function(){
+      fLine('e','Failed uploading: no upload port provided');
+      fBusy(false);fs.result='err';
+      if(fs.cable==='none')fBanner('bad','找不到連接埠','USB 線還沒插上。到第 2 步選一條線插上。');
+      else fBanner('bad','找不到連接埠','充電線只有電源線，沒有資料線，電腦看不到 Mochi。到第 2 步換成傳輸線。');
+      fxSteps();});
+    return;
+  }
+  fLine('','esptool --chip '+(fs.board==='esp32'?'esp32':'esp32c3')+' --port COM3 --baud '+fs.speed+' write-flash 0x10000 mochi.bin');
+  fAfter(500,function(){fLine('','Connecting....');});
+  fAfter(1200,function(){
+    if(fs.board==='esp32'){
+      fLine('e','A fatal error occurred: This chip is ESP32-C3, not ESP32.');
+      fLine('z','// 程式是編給 ESP32 的，但板子上的晶片是 ESP32-C3');
+      fBusy(false);fs.result='err';
+      fBanner('bad','上傳失敗：晶片對不上','你的程式是編給「ESP32」的，但 Mochi 的大腦是「ESP32-C3」。到第 3 步改成 ESP32C3 Dev Module，重新上傳。');fxSteps();return;
+    }
+    fLine('','Chip is ESP32-C3. Features: WiFi, BLE');
+    fLine('','Changing baud rate to '+fs.speed);
+    $('fxLedPill').innerHTML='<span class="pill warn">燒錄中，螢幕暫停</span>';fRenderScreen('flash');fShow($('fxScreen'));
+    var total=fs.speed===921600?4200:11000,n=20,i=0,addr=0x10000,size=fSize();
+    fLine('z','// 速度設 '+fs.speed+'，'+(fs.speed===921600?'比較快':'比較慢，大約要多等兩倍以上的時間'));
+    (function tick(){
+      i++;var pct=Math.round(i/n*100);fxBar(pct);
+      if(i%4===0||i===n)fLine('','Writing at 0x'+(addr+Math.floor(size*i/n)).toString(16).padStart(8,'0')+'... ('+pct+' %)');
+      if(i<n)fAfter(total/n,tick);
+      else fAfter(400,function(){
+        fLine('','Wrote '+fmt(size)+' bytes at 0x00010000');
+        fLine('o','Hash of data verified.');
+        fLine('','Hard resetting via RTS pin...');
+        fLine('z','// ③ 重新開機：Mochi 開始跑你的新程式');
+        fs.flashed={text:fs.text,color:fs.color,anim:fs.anim,cdc:fs.cdc};fBusy(false,'上傳完成');fBoot();
+      });
+    })();
+  });
+}
+function fRenderScreen(mode){
+  var sv=$('fxScreen'),f=fs.flashed,bg=f?FCOL[f.color][0]:'#05080B',ink=(f&&FCOL[f.color][1]==='BLACK')?'#fff':'#fff',s='';
+  if(mode==='off'||!f)s=R(0,0,240,240,'#05080B')+(mode==='off'?'':T(48,112,2,'#3A5068','no program'));
+  else if(mode==='flash')s=R(0,0,240,240,'#05080B')+T(60,104,2,'#F5B45F','uploading')+T(84,128,2,'#F5B45F','...');
+  else if(mode==='boot'){var sz=f.text.length<=6?4:(f.text.length<=8?3:2),w=f.text.length*6*sz;s=R(0,0,240,240,bg)+T(Math.round((240-w)/2),Math.round(120-4*sz),sz,ink,f.text);}
+  else if(mode==='eyes'){var o=fEyeOff;s=R(0,0,240,240,bg)+'<ellipse cx="'+(70+o)+'" cy="96" rx="17" ry="'+(fBlink?3:29)+'" fill="'+(FCOL[f.color][1]==='BLACK'?'#fff':'#0B1320')+'"/><ellipse cx="'+(170+o)+'" cy="96" rx="17" ry="'+(fBlink?3:29)+'" fill="'+(FCOL[f.color][1]==='BLACK'?'#fff':'#0B1320')+'"/>'+T(Math.round((240-f.text.length*12)/2),190,2,FCOL[f.color][1]==='BLACK'?'#fff':'#0B1320',f.text);}
+  sv.innerHTML=s;
+}
+var fEyeOff=0,fBlink=false;
+function fBoot(){
+  var f=fs.flashed,k=f.anim===1?2:(f.anim===3?0.5:1);
+  $('fxLedPill').innerHTML='<span class="pill ok">執行中</span>';
+  $('fxMon').textContent='';
+  function mon(t){if(f.cdc){$('fxMon').textContent+=t+'\n';}}
+  fRenderScreen('boot');mon('ESP-ROM:esp32c3');mon('boot: SPI_FAST_FLASH_BOOT');
+  fAfter(1400*k,function(){mon('Hello, '+f.text);});
+  var seq=[-16,16,-16,16,0];
+  fAfter(1600*k,function(){fRenderScreen('eyes');});
+  seq.forEach(function(o,i){fAfter(1600*k+(i+1)*160*k,function(){fEyeOff=o;fRenderScreen('eyes');});});
+  fAfter(1600*k+6*160*k+200*k,function(){fBlink=true;fRenderScreen('eyes');});
+  fAfter(1600*k+6*160*k+340*k,function(){fBlink=false;fRenderScreen('eyes');
+    if(f.cdc){fs.result='ok';fBanner('ok','燒錄成功！','Mochi 已經在跑你的程式了。試試改開機文字或顏色，再按一次上傳。');}
+    else{fs.result='ok-nocdc';fBanner('info','Mochi 動起來了，但序列埠一片空白','程式有在跑，可是 Serial.println 的訊息沒有送回電腦。SuperMini 要把「USB CDC On Boot」設成 Enabled，訊息才會走 USB 線回來。改好再上傳一次看看。');
+      $('fxMon').textContent='（沒有收到任何訊息）';}
+    fxSteps();
+  });
+  fxSteps();
+}
+function fInvalidate(){if(fs.busy)return;if(fs.compiled&&fs.compiled!==fConfigKey()){$('fxPhase').textContent='程式或設定改了，要重新上傳';}fxSteps();}
+function fxReset(){
+  fClearTimers();fs.cable='none';fs.board='esp32c3';fs.cdc=1;fs.speed=921600;fs.compiled=null;fs.flashed=null;fs.result=null;fs.busy=false;
+  $('fxBoard').value='esp32c3';$('fxCdc').value='1';$('fxSpeed').value='921600';
+  $('fxConsole').innerHTML='';fxBar(0);fBusy(false);$('fxResult').innerHTML='';$('fxMon').textContent='（還沒有連線）';$('fxLedPill').innerHTML='';
+  fRenderEditor();fRenderCable();fRenderScreen('off');fxSteps();
+}
+function fInit(){
+  fRenderEditor();fRenderCable();fRenderScreen('off');fxSteps();$('fxMon').textContent='（還沒有連線）';
+  $('fxEditor').addEventListener('input',function(e){
+    if(e.target.id==='fxText'){fs.text=e.target.value;fSave();fInvalidate();}
+  });
+  $('fxEditor').addEventListener('change',function(e){
+    if(e.target.id==='fxColor'){fs.color=+e.target.value;fSave();fInvalidate();}
+    if(e.target.id==='fxAnim'){fs.anim=+e.target.value;fSave();fInvalidate();}
+  });
+  $('fxCable').addEventListener('click',function(e){var b=e.target.closest('[data-cable]');if(!b||fs.busy)return;fs.cable=b.getAttribute('data-cable');fRenderCable();fxSteps();
+    toast(fs.cable==='data'?'插好了，電腦找到新的連接埠 COM3。':'板子有電了，但電腦沒有發現新的連接埠。');});
+  $('fxBoard').addEventListener('change',function(e){fs.board=e.target.value;fInvalidate();});
+  $('fxCdc').addEventListener('change',function(e){fs.cdc=+e.target.value;fInvalidate();});
+  $('fxSpeed').addEventListener('change',function(e){fs.speed=+e.target.value;});
+  $('fxVerify').addEventListener('click',function(){if(fs.busy)return;$('fxConsole').innerHTML='';fCompile();});
+  $('fxUpload').addEventListener('click',function(){if(fs.busy)return;$('fxConsole').innerHTML='';fCompile(function(){fUploadRun();});});
+  $('fxReset').addEventListener('click',fxReset);
+}
+
 /* ================= routing & events ================= */
-var VIEWS=['pins','wiring'];
+var VIEWS=['pins','wiring','flash'];
 function showView(){
   var v=(location.hash||'').replace('#','');if(VIEWS.indexOf(v)<0)v='pins';
   VIEWS.forEach(function(k){$('view-'+k).hidden=k!==v;});
@@ -905,6 +1203,7 @@ function init(){
   // popup
   $('scrim').addEventListener('click',function(e){if(e.target===$('scrim')||e.target.closest('[data-close]'))closeModal();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('scrim').hidden)closeModal();});
+  fInit();
   showView();
 }
 init();
