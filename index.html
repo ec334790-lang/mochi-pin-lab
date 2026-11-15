@@ -134,6 +134,8 @@ svg{display:block;max-width:100%;height:auto}
 .grid-dot{fill:var(--line)}
 .comp-body{fill:#1E4E9E;stroke:#143A78;stroke-width:1.5}
 .comp-text{font-family:var(--f-mono);font-size:10.5px;fill:#E8F1FF;pointer-events:none}
+.comp-text.pinlab{font-size:8.5px;font-weight:700}
+.comp-hdr{fill:#14181E}
 .comp-cap{font-family:var(--f-body);font-size:12px;fill:var(--muted)}
 .cpin{cursor:pointer;outline:none}
 .cpin .ring{fill:none;stroke:transparent;stroke-width:3}
@@ -165,7 +167,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 /* controller */
 .ctltop{display:grid;grid-template-columns:132px minmax(0,1fr);gap:14px;align-items:start}
 .mini-lcd{display:flex;flex-direction:column;gap:4px}
-.mini-lcd svg{border-radius:8px;border:4px solid #0A0E13;background:#05080B;width:100%}
+.mini-lcd{position:relative;background:#1E4E9E;border-radius:8px;padding:22px 7px 6px}
+.mini-lcd::before{content:"";position:absolute;left:7px;right:7px;top:5px;height:12px;border-radius:2px;background:radial-gradient(circle,#E0B84A 0 2.5px,transparent 3px) 0 50%/12.5% 100% repeat-x,#14181E}
+.mini-lcd svg{border-radius:3px;border:3px solid #0A0E13;border-bottom-width:7px;background:#05080B;width:100%}
+.mini-lcd .note{color:#E8F1FF!important}
 .ctl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .vbtn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;line-height:1.35;text-align:center}
 .vbtn b{font-size:13.5px} .vbtn span{font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
@@ -252,8 +257,10 @@ footer .wrap{padding-block:18px}
 .pbar{height:12px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);overflow:hidden}
 .pbar span{display:block;height:100%;width:0;background:#E07B00;transition:width .15s linear}
 .device{display:flex;flex-direction:column;align-items:center;gap:12px}
-.device .scr{width:min(260px,100%);border-radius:14px;background:#1E4E9E;padding:14px;box-shadow:var(--shadow)}
-.device .scr svg{border-radius:6px;border:4px solid #0A0E13;width:100%;background:#05080B}
+.device .scr{position:relative;width:min(260px,100%);border-radius:12px;background:#1E4E9E;padding:44px 16px 12px;box-shadow:var(--shadow)}
+.device .scr::before{content:"";position:absolute;left:16px;right:16px;top:10px;height:24px;border-radius:3px;background:radial-gradient(circle,#E0B84A 0 5px,transparent 5.5px) 0 50%/12.5% 100% repeat-x,#14181E}
+.device .scr::after{content:'1.54" TFT 240×240';display:block;margin-top:8px;font-family:var(--f-mono);font-size:11px;color:#E8F1FF;text-align:center;opacity:.85}
+.device .scr svg{display:block;border-radius:4px;border:6px solid #0A0E13;border-bottom-width:12px;width:100%;background:#05080B}
 .device .chipline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center}
 .fbanner{border-radius:12px;padding:12px 14px;font-size:14.5px;display:flex;gap:10px;align-items:flex-start}
 .fbanner b{display:block}
@@ -627,18 +634,20 @@ function selectPin(id){state.pinSel=id;store.set('pinSel',id);updatePinBoard();r
 
 /* ================= WIRING ================= */
 var BX=120,BY=74;
-var SCR={x:520,y:58,w:212,h:262};
+var SCR={x:524,y:80,w:212,h:300};
 var SCR_PINS=['GND','VCC','SCL','SDA','RES','DC','CS','BLK'];
 var COMP={GND:{color:'var(--w-gnd)',desc:'螢幕 GND'},VCC:{color:'#E5484D',desc:'螢幕 VCC'},SCL:{color:'#2FA36B',desc:'螢幕 SCL（時脈）'},
   SDA:{color:'#F08C2E',desc:'螢幕 SDA（資料）'},RES:{color:'#9B6BF2',desc:'螢幕 RES（重置）'},DC:{color:'#3B82F6',desc:'螢幕 DC'},
   CS:{color:'#14A3B8',desc:'螢幕 CS（片選）'},BLK:{color:'#D9A400',desc:'螢幕 BLK（背光）'}};
-var LCD={x:SCR.x+62,y:SCR.y+26,w:136,h:136};
-function compXY(id){return {x:SCR.x+14,y:SCR.y+34+SCR_PINS.indexOf(id)*27};}
+/* 1.54" TFT module: 8-pin header across the top edge (GND VCC SCL SDA RES DC CS BLK), square 240x240 panel below */
+var LCD={x:SCR.x+20,y:SCR.y+62,w:172,h:172};
+function compXY(id){return {x:SCR.x+22+SCR_PINS.indexOf(id)*24,y:SCR.y+16};}
 function boardXY(id){var q=padXY(PIN[id]);return {x:BX+q.x,y:BY+q.y};}
 function routePath(cid,bid){
-  var c=compXY(cid),b=boardXY(bid),L=PIN[bid].side==='L',pts,bottom=BY+250,i=SCR_PINS.indexOf(cid),lx=340+i*14;
-  if(L)pts=[[b.x,b.y],[BX-16-i*9,b.y],[BX-16-i*9,bottom+14+i*9],[lx,bottom+14+i*9],[lx,c.y],[c.x,c.y]];
-  else pts=[[b.x,b.y],[lx,b.y],[lx,c.y],[c.x,c.y]];
+  // wires climb a lane, run above the module at their own height, then drop onto the pin from above
+  var c=compXY(cid),b=boardXY(bid),L=PIN[bid].side==='L',pts,bottom=BY+250,i=SCR_PINS.indexOf(cid),lx=496-i*12,hy=SCR.y-12-i*7;
+  if(L)pts=[[b.x,b.y],[BX-16-i*9,b.y],[BX-16-i*9,bottom+14+i*9],[lx,bottom+14+i*9],[lx,hy],[c.x,hy],[c.x,c.y]];
+  else pts=[[b.x,b.y],[lx,b.y],[lx,hy],[c.x,hy],[c.x,c.y]];
   return 'M'+pts.map(function(p){return p[0]+' '+p[1];}).join(' L');
 }
 function benchMarkup(){
@@ -646,12 +655,16 @@ function benchMarkup(){
   s+='<defs><clipPath id="lcdClip"><rect x="0" y="0" width="240" height="240"/></clipPath></defs>';
   s+='<rect class="benchbg" x="0" y="0" width="760" height="420"/>';
   for(var gy=30;gy<420;gy+=40)for(var gx=20;gx<760;gx+=40)s+='<circle class="grid-dot" cx="'+gx+'" cy="'+gy+'" r="1"/>';
-  s+='<g><rect class="comp-body" x="'+SCR.x+'" y="'+SCR.y+'" width="'+SCR.w+'" height="'+SCR.h+'" rx="10"/>';
-  s+='<rect x="'+(LCD.x-5)+'" y="'+(LCD.y-5)+'" width="'+(LCD.w+10)+'" height="'+(LCD.h+10)+'" rx="6" fill="#0A0E13"/><g id="lcd"></g>';
-  s+='<text class="comp-text" x="'+(LCD.x+LCD.w/2)+'" y="'+(LCD.y+LCD.h+26)+'" text-anchor="middle">ST7789 1.54" 240x240</text>';
-  s+='<text class="comp-text" x="'+(LCD.x+LCD.w/2)+'" y="'+(LCD.y+LCD.h+42)+'" text-anchor="middle" style="opacity:.7">3.3V only</text>';
+  var cx=SCR.x+SCR.w/2;
+  s+='<g><rect class="comp-body" x="'+SCR.x+'" y="'+SCR.y+'" width="'+SCR.w+'" height="'+SCR.h+'" rx="9"/>';
+  [[SCR.x+9,SCR.y+9],[SCR.x+SCR.w-9,SCR.y+9],[SCR.x+9,SCR.y+SCR.h-9],[SCR.x+SCR.w-9,SCR.y+SCR.h-9]].forEach(function(m){s+='<circle cx="'+m[0]+'" cy="'+m[1]+'" r="3.4" fill="#0F2F63"/>';});
+  s+='<rect class="comp-hdr" x="'+(SCR.x+8)+'" y="'+(SCR.y+4)+'" width="'+(SCR.w-16)+'" height="24" rx="3"/>';
+  s+='<rect x="'+(LCD.x-6)+'" y="'+(LCD.y-6)+'" width="'+(LCD.w+12)+'" height="'+(LCD.h+20)+'" rx="5" fill="#0A0E13"/>';
+  s+='<rect x="'+(cx-22)+'" y="'+(LCD.y+LCD.h+14)+'" width="44" height="10" fill="#C9A227" opacity=".85"/><g id="lcd"></g>';
+  s+='<text class="comp-text" x="'+cx+'" y="'+(LCD.y+LCD.h+40)+'" text-anchor="middle">1.54" TFT 240x240 ST7789</text>';
+  s+='<text class="comp-text" x="'+cx+'" y="'+(LCD.y+LCD.h+55)+'" text-anchor="middle" style="opacity:.7">3.3V only</text>';
   SCR_PINS.forEach(function(id){var q=compXY(id);
-    s+='<g class="cpin" data-comp="'+id+'" tabindex="0" role="button" aria-label="'+COMP[id].desc+'"><circle class="padc" cx="'+q.x+'" cy="'+q.y+'" r="7"/><circle class="hole" cx="'+q.x+'" cy="'+q.y+'" r="2.6"/><circle class="ring" cx="'+q.x+'" cy="'+q.y+'" r="11"/><text class="comp-text" x="'+(q.x+13)+'" y="'+(q.y+4)+'">'+id+'</text><rect x="'+(q.x-13)+'" y="'+(q.y-13)+'" width="52" height="26" fill="transparent"/></g>';});
+    s+='<g class="cpin" data-comp="'+id+'" tabindex="0" role="button" aria-label="'+COMP[id].desc+'"><circle class="padc" cx="'+q.x+'" cy="'+q.y+'" r="7"/><circle class="hole" cx="'+q.x+'" cy="'+q.y+'" r="2.6"/><circle class="ring" cx="'+q.x+'" cy="'+q.y+'" r="11"/><text class="comp-text pinlab" x="'+q.x+'" y="'+(q.y+31)+'" text-anchor="middle">'+id+'</text><rect x="'+(q.x-12)+'" y="'+(q.y-13)+'" width="24" height="50" fill="transparent"/></g>';});
   s+='</g>';
   s+=boardMarkup(BX,BY,'wire');
   s+='<text class="comp-cap" x="'+(BX+90)+'" y="'+(BY-22)+'" text-anchor="middle">ESP32-C3 SuperMini</text>';
@@ -1209,6 +1222,5 @@ function init(){
 init();
 })();
 </script>
-
 </body>
 </html>
