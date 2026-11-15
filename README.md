@@ -7,28 +7,6 @@ ESP32-C3 SuperMini 的腳位互動學習網站，以 Clawd Mochi 的螢幕接線
 - **空間預算**：勾選要編進韌體的功能，看 Flash 和 RAM 的佔比
 - **燒錄體驗**：模擬 Arduino IDE 的燒錄流程：改程式、插 USB 線、選開發板、驗證、上傳，再看 Mochi 跑出結果。選錯線材或開發板會出現對應的錯誤訊息
 
-整個網站只有一個 `index.html`，不需要安裝或建置。
-
-## 在自己電腦上看
-
-直接用瀏覽器打開 `index.html`。
-
-## 放上 GitHub Pages
-
-1. 在 GitHub 建一個新的 repository（例如 `mochi-pin-lab`），設為 Public。
-2. 把這個資料夾裡的 `index.html`、`README.md`、`.nojekyll` 上傳到 repository 的根目錄。
-   - 網頁操作：Add file → Upload files → 拖進去 → Commit changes
-   - 或用指令：
-     ```
-     git init
-     git add .
-     git commit -m "Mochi 腳位實驗室"
-     git branch -M main
-     git remote add origin https://github.com/<你的帳號>/mochi-pin-lab.git
-     git push -u origin main
-     ```
-3. 到 repository 的 Settings → Pages，Source 選 **Deploy from a branch**，Branch 選 **main**、資料夾選 **/(root)**，按 Save。
-4. 等一兩分鐘，網址會是 `https://<你的帳號>.github.io/mochi-pin-lab/`。
 
 ## 資料說明
 
